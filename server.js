@@ -1,94 +1,412 @@
-// server.js
-const express = require('express');
-const cors = require('cors');
-const RSS = require('rss');
+// server-no-express.js
+const http = require('http');
+const fs = require('fs');
 const path = require('path');
-
-const app = express();
-app.use(cors());
-app.use(express.static('public'));
-
-const devices = [
-  {
-    name: 'iPhone 14',
-    price: 5000,
-    batteryLife: 20,
-    type: 'telefon',
-    features: ['5G', 'iOS', 'Face ID']
-  },
-  {
-    name: 'Samsung Galaxy S23',
-    price: 4500,
-    batteryLife: 24,
-    type: 'telefon',
-    features: ['Android', '5G', 'AMOLED']
-  },
-  {
-    name: 'DJI Mini 3 Pro',
-    price: 3800,
-    batteryLife: 30,
-    type: 'drona',
-    features: ['Drone', 'Camera 4K', 'GPS']
-  },
-  {
-    name: 'Huawei Watch GT 4',
-    price: 900,
-    batteryLife: 14,
-    type: 'ceas',
-    features: ['Smartwatch', 'Bluetooth', 'Monitorizare somn']
-  },
-  {
-    name: 'iPad Air',
-    price: 3200,
-    batteryLife: 10,
-    type: 'tableta',
-    features: ['iOS', 'Apple Pencil', 'Retina Display']
-  }
-];
-
-app.get('/api/recommendations', (req, res) => {
-  const { q = '', minPrice, maxPrice, batteryLife, deviceType } = req.query;
-
-  const results = devices.filter(d => {
-    const matchesQuery =
-      q === '' ||
-      d.name.toLowerCase().includes(q.toLowerCase()) ||
-      d.features.some(f => f.toLowerCase().includes(q.toLowerCase()));
-
-    const matchesMinPrice = !minPrice || d.price >= parseFloat(minPrice);
-    const matchesMaxPrice = !maxPrice || d.price <= parseFloat(maxPrice);
-    const matchesBattery = !batteryLife || d.batteryLife >= parseFloat(batteryLife);
-    const matchesType = !deviceType || d.type === deviceType;
-
-    return matchesQuery && matchesMinPrice && matchesMaxPrice && matchesBattery && matchesType;
-  });
-
-  res.json(results);
-});
-
-app.get('/rss', (req, res) => {
-  const feed = new RSS({
-    title: 'Recomandări populare de dispozitive',
-    description: 'Cele mai populare dispozitive electronice filtrate',
-    feed_url: 'http://localhost:3000/rss',
-    site_url: 'http://localhost:3000',
-    language: 'ro'
-  });
-
-  devices.slice(0, 5).forEach(d => {
-    feed.item({
-      title: d.name,
-      description: `Preț: ${d.price} Lei, Autonomie: ${d.batteryLife}h, Tip: ${d.type}`,
-      url: '#',
-      date: new Date()
-    });
-  });
-
-  res.set('Content-Type', 'application/rss+xml');
-  res.send(feed.xml({ indent: true }));
-});
+const url = require('url');
+const { Pool } = require('pg');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const RSS = require('rss');
 
 const PORT = 3000;
-app.listen(PORT, () => {
-  console.log(`Serverul rulează pe http://localhost:${PORT}`);
+const JWT_SECRET = process.env.JWT_SECRET || 'your_super_secret_jwt_key_12345';
+
+// --- PostgreSQL Database Configuration ---
+const pool = new Pool({
+  user: 'postgres', // IMPORTANT: Change this to your PostgreSQL username
+  host: 'localhost',
+  database: 'DeW',
+  password: 'admin',
+  port: 5432,
 });
+
+// Test database connection
+pool.connect((err, client, done) => {
+  if (err) {
+    console.error('Database connection failed:', err.stack);
+  } else {
+    console.log('Successfully connected to the PostgreSQL database.');
+    client.release(); // Release the client back to the pool
+  }
+});
+
+// --- Helper to send JSON responses ---
+function sendJSON(res, data, status = 200) {
+  res.writeHead(status, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Content-Type, Authorization' });
+  res.end(JSON.stringify(data));
+}
+
+// --- Helper to parse request body for POST requests ---
+function parseBody(req) {
+  return new Promise((resolve, reject) => {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        resolve(JSON.parse(body));
+      } catch (e) {
+        reject(e);
+      }
+    });
+  });
+}
+
+// --- Helper to serve static files from 'public' directory ---
+function serveStatic(res, pathname) {
+  // If the path is just '/', serve index.html, otherwise serve the requested file
+  const filePath = path.join(__dirname, 'public', pathname === '/' ? 'index.html' : pathname);
+  
+  fs.readFile(filePath, (err, data) => {
+    if (err) {
+      // If file not found, try to serve index.html for SPA fallback
+      if (err.code === 'ENOENT' && pathname !== '/index.html') {
+          return serveStatic(res, '/index.html'); // Fallback to index.html
+      }
+      res.writeHead(404, { 'Access-Control-Allow-Origin': '*' });
+      res.end('Not found');
+    } else {
+      const ext = path.extname(filePath);
+      const contentType = {
+        '.html': 'text/html',
+        '.css': 'text/css',
+        '.js': 'application/javascript',
+        '.json': 'application/json',
+        '.ico': 'image/x-icon' // Added for favicon, etc.
+      }[ext] || 'text/plain'; // Default to plain text
+      res.writeHead(200, { 'Content-Type': contentType, 'Access-Control-Allow-Origin': '*' });
+      res.end(data);
+    }
+  });
+}
+
+// --- Middleware for authenticating JWT tokens ---
+function authenticateToken(req, res, callback) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+
+  if (!token) {
+    return sendJSON(res, { message: 'Acces refuzat. Niciun token furnizat.' }, 401);
+  }
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) {
+      console.error('Verificarea tokenului a eșuat:', err);
+      return sendJSON(res, { message: 'Token invalid.' }, 403);
+    }
+    // Attach user information (from token payload) to the request object
+    req.user = user;
+    callback(); // Call the next function (the actual route handler)
+  });
+}
+
+// Create the HTTP server
+http.createServer(async (req, res) => {
+  const parsedUrl = url.parse(req.url, true);
+  let pathname = parsedUrl.pathname;
+
+  // Handle CORS preflight requests
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS'); // Added PUT, DELETE
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204); // No content
+    return res.end();
+  }
+
+  // --- Static File Serving ---
+  if (req.method === 'GET' && !pathname.startsWith('/api') && pathname !== '/rss') {
+    return serveStatic(res, pathname);
+  }
+
+  // --- API Endpoint: Device Recommendations (now fetches from DB) ---
+  if (req.method === 'GET' && pathname === '/api/recommendations') {
+    const { q = '', minPrice, maxPrice, batteryLife, deviceType } = parsedUrl.query;
+
+    let queryText = 'SELECT id, name, price, batterylife, type, features, link FROM products WHERE 1=1';
+    const queryParams = [];
+    let paramIndex = 1;
+
+    if (minPrice) {
+        queryText += ` AND price >= $${paramIndex++}`;
+        queryParams.push(parseFloat(minPrice));
+    }
+    if (maxPrice) {
+        queryText += ` AND price <= $${paramIndex++}`;
+        queryParams.push(parseFloat(maxPrice));
+    }
+    if (batteryLife) {
+        queryText += ` AND batterylife >= $${paramIndex++}`; 
+        queryParams.push(parseFloat(batteryLife));
+    }
+    if (deviceType) {
+        queryText += ` AND type = $${paramIndex++}`;
+        queryParams.push(deviceType);
+    }
+
+    // For 'q' parameter, search in name or features (case-insensitive)
+    if (q) {
+        const searchTerm = `%${q.toLowerCase()}%`;
+        queryText += ` AND (LOWER(name) LIKE $${paramIndex++} OR EXISTS (SELECT 1 FROM UNNEST(features) AS feature WHERE LOWER(feature) LIKE $${paramIndex++}))`;
+        queryParams.push(searchTerm, searchTerm);
+    }
+
+    queryText += ' ORDER BY id ASC'; 
+
+    try {
+        const { rows } = await pool.query(queryText, queryParams);
+        return sendJSON(res, rows);
+    } catch (error) {
+        console.error('Error fetching recommendations from DB:', error);
+        return sendJSON(res, { message: 'Eroare la preluarea recomandărilor.' }, 500);
+    }
+  }
+
+  // --- API Endpoint: Get Single Product by ID ---
+  const productMatch = pathname.match(/^\/api\/products\/(\d+)$/);
+  if (req.method === 'GET' && productMatch) {
+    const productId = parseInt(productMatch[1], 10);
+    if (isNaN(productId)) {
+        return sendJSON(res, { message: 'ID produs invalid.' }, 400);
+    }
+    try {
+        const { rows } = await pool.query('SELECT id, name, price, batterylife, type, features, link FROM products WHERE id = $1', [productId]);
+        if (rows.length > 0) {
+            return sendJSON(res, rows[0]);
+        } else {
+            return sendJSON(res, { message: 'Produsul nu a fost găsit.' }, 404);
+        }
+    } catch (error) {
+        console.error(`Error fetching product with ID ${productId} from DB:`, error);
+        return sendJSON(res, { message: 'Eroare la preluarea produsului.' }, 500);
+    }
+  }
+
+  // --- API Endpoint: Add New Product (Admin only) ---
+  if (req.method === 'POST' && pathname === '/api/products') {
+    return authenticateToken(req, res, async () => {
+      if (req.user.role !== 'admin') {
+        return sendJSON(res, { message: 'Acces interzis. Doar administratorii pot adăuga produse.' }, 403);
+      }
+
+      try {
+        const { name, price, batteryLife, type, features, link } = await parseBody(req);
+        console.log('Parsed product data for insertion:', { name, price, batteryLife, type, features, link });
+
+        if (!name || !price || isNaN(price) || price <= 0 || !type || !features) {
+          return sendJSON(res, { message: 'Numele, prețul valid, tipul și caracteristicile produsului sunt obligatorii.' }, 400);
+        }
+        
+        const featuresArray = Array.isArray(features) ? features : features.split(',').map(f => f.trim()).filter(f => f.length > 0);
+        const parsedBatteryLife = batteryLife ? parseInt(batteryLife, 10) : null;
+
+        const result = await pool.query(
+          'INSERT INTO products (name, price, batterylife, type, features, link) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, name',
+          [name, parseFloat(price), parsedBatteryLife, type, featuresArray, link || null]
+        );
+        return sendJSON(res, { message: 'Produs adăugat cu succes!', product: result.rows[0] }, 201);
+      } catch (error) {
+        console.error('SERVER ERROR adding product:', error.message, error.stack);
+        return sendJSON(res, { message: 'Eroare de server la adăugarea produsului.' }, 500);
+      }
+    });
+  }
+
+  // --- API Endpoint: Update Product (Admin only) ---
+  // Matches paths like PUT /api/products/123
+  const updateProductMatch = pathname.match(/^\/api\/products\/(\d+)$/);
+  if (req.method === 'PUT' && updateProductMatch) {
+    return authenticateToken(req, res, async () => {
+      if (req.user.role !== 'admin') {
+        return sendJSON(res, { message: 'Acces interzis. Doar administratorii pot edita produse.' }, 403);
+      }
+
+      const productId = parseInt(updateProductMatch[1], 10);
+      if (isNaN(productId)) {
+        return sendJSON(res, { message: 'ID produs invalid.' }, 400);
+      }
+
+      try {
+        const { name, price, batteryLife, type, features, link } = await parseBody(req);
+        console.log('Parsed product data for update:', { productId, name, price, batteryLife, type, features, link });
+
+        // Basic validation for update
+        if (!name || !price || isNaN(price) || price <= 0 || !type || !features) {
+          return sendJSON(res, { message: 'Numele, prețul valid, tipul și caracteristicile produsului sunt obligatorii pentru actualizare.' }, 400);
+        }
+
+        const featuresArray = Array.isArray(features) ? features : features.split(',').map(f => f.trim()).filter(f => f.length > 0);
+        const parsedBatteryLife = batteryLife ? parseInt(batteryLife, 10) : null;
+
+        const result = await pool.query(
+          'UPDATE products SET name = $1, price = $2, batterylife = $3, type = $4, features = $5, link = $6 WHERE id = $7 RETURNING id, name',
+          [name, parseFloat(price), parsedBatteryLife, type, featuresArray, link || null, productId]
+        );
+
+        if (result.rows.length > 0) {
+          return sendJSON(res, { message: 'Produs actualizat cu succes!', product: result.rows[0] });
+        } else {
+          return sendJSON(res, { message: 'Produsul nu a fost găsit pentru actualizare.' }, 404);
+        }
+      } catch (error) {
+        console.error('SERVER ERROR updating product:', error.message, error.stack);
+        return sendJSON(res, { message: 'Eroare de server la actualizarea produsului.' }, 500);
+      }
+    });
+  }
+
+  // --- API Endpoint: Delete Product (Admin only) ---
+  // Matches paths like DELETE /api/products/123
+  const deleteProductMatch = pathname.match(/^\/api\/products\/(\d+)$/);
+  if (req.method === 'DELETE' && deleteProductMatch) {
+    return authenticateToken(req, res, async () => {
+      if (req.user.role !== 'admin') {
+        return sendJSON(res, { message: 'Acces interzis. Doar administratorii pot șterge produse.' }, 403);
+      }
+
+      const productId = parseInt(deleteProductMatch[1], 10);
+      if (isNaN(productId)) {
+        return sendJSON(res, { message: 'ID produs invalid.' }, 400);
+      }
+
+      try {
+        const result = await pool.query('DELETE FROM products WHERE id = $1 RETURNING id', [productId]);
+        if (result.rows.length > 0) {
+          return sendJSON(res, { message: 'Produs șters cu succes!', id: result.rows[0].id });
+        } else {
+          return sendJSON(res, { message: 'Produsul nu a fost găsit pentru ștergere.' }, 404);
+        }
+      } catch (error) {
+        console.error('SERVER ERROR deleting product:', error.message, error.stack);
+        return sendJSON(res, { message: 'Eroare de server la ștergerea produsului.' }, 500);
+      }
+    });
+  }
+
+
+  // --- API Endpoint: RSS Feed (now fetches from DB) ---
+  if (req.method === 'GET' && pathname === '/rss') {
+    try {
+        const { rows } = await pool.query('SELECT name, price, batterylife, type, features, link, created_at FROM products ORDER BY created_at DESC LIMIT 5');
+
+        const feed = new RSS({
+          title: 'Recomandări populare de dispozitive',
+          description: 'Cele mai populare dispozitive electronice filtrate',
+          feed_url: 'http://localhost:3000/rss',
+          site_url: 'http://localhost:3000',
+          language: 'ro'
+        });
+
+        rows.forEach(d => {
+          feed.item({
+            title: d.name,
+            description: `Preț: ${d.price} Lei, Autonomie: ${d.batterylife}h, Tip: ${d.type}, Caracteristici: ${d.features.join(', ')}`,
+            url: d.link || `http://localhost:${PORT}/product-details.html?id=${d.id}`,
+            date: d.created_at || new Date()
+          });
+        });
+
+        res.writeHead(200, { 'Content-Type': 'application/rss+xml', 'Access-Control-Allow-Origin': '*' });
+        return res.end(feed.xml({ indent: true }));
+    } catch (error) {
+        console.error('Error generating RSS feed from DB:', error);
+        return sendJSON(res, { message: 'Eroare la generarea feed-ului RSS.' }, 500);
+    }
+  }
+
+  // --- API Endpoint: User Registration ---
+  if (req.method === 'POST' && pathname === '/api/register') {
+    try {
+      const { username, password, role = 'user' } = await parseBody(req);
+
+      if (!username || !password) {
+        return sendJSON(res, { message: 'Numele de utilizator și parola sunt obligatorii.' }, 400);
+      }
+
+      const minLength = 6;
+      const hasUppercase = /[A-Z]/.test(password);
+      const hasDigit = /\d/.test(password);
+
+      if (password.length < minLength) {
+        return sendJSON(res, { message: `Parola trebuie să aibă minim ${minLength} caractere.` }, 400);
+      }
+      if (!hasUppercase) {
+        return sendJSON(res, { message: 'Parola trebuie să conțină cel puțin o literă mare.' }, 400);
+      }
+      if (!hasDigit) {
+        return sendJSON(res, { message: 'Parola trebuie să conțină cel puțin o cifră.' }, 400);
+      }
+
+      const userCheck = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
+      if (userCheck.rows.length > 0) {
+        return sendJSON(res, { message: 'Numele de utilizator există deja.' }, 409);
+      }
+
+      const salt = await bcrypt.genSalt(10);
+      const passwordHash = await bcrypt.hash(password, salt);
+
+      const result = await pool.query(
+        'INSERT INTO users (username, password_hash, role) VALUES ($1, $2, $3) RETURNING id, username, role',
+        [username, passwordHash, role]
+      );
+
+      const newUser = result.rows[0];
+      return sendJSON(res, { message: 'Utilizator înregistrat cu succes!', user: { id: newUser.id, username: newUser.username, role: newUser.role } }, 201);
+
+    } catch (error) {
+      console.error('Eroare la înregistrarea utilizatorului:', error);
+      return sendJSON(res, { message: 'Eroare de server la înregistrare.' }, 500);
+    }
+  }
+
+  // --- API Endpoint: User Login ---
+  if (req.method === 'POST' && pathname === '/api/login') {
+    try {
+      const { username, password } = await parseBody(req);
+
+      if (!username || !password) {
+        return sendJSON(res, { message: 'Numele de utilizator și parola sunt obligatorii.' }, 400);
+      }
+
+      const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
+      const user = result.rows[0];
+
+      if (!user) {
+        return sendJSON(res, { message: 'Credențiale invalide.' }, 400);
+      }
+
+      const isMatch = await bcrypt.compare(password, user.password_hash);
+
+      if (!isMatch) {
+        return sendJSON(res, { message: 'Credențiale invalide.' }, 400);
+      }
+
+      const token = jwt.sign(
+        { userId: user.id, role: user.role },
+        JWT_SECRET,
+        { expiresIn: '1m' }
+      );
+
+      return sendJSON(res, { message: 'Conectat cu succes!', token, role: user.role, username: user.username });
+
+    } catch (error) {
+      console.error('Eroare la conectarea utilizatorului:', error);
+      return sendJSON(res, { message: 'Eroare de server la conectare.' }, 500);
+    }
+  }
+
+  // --- Protected API Endpoint ---
+  if (req.method === 'GET' && pathname === '/api/protected-info') {
+    authenticateToken(req, res, () => {
+      if (req.user.role === 'admin') {
+        return sendJSON(res, { message: `Bine ai venit, ${req.user.role}! Ai accesat informații protejate (admin). ID-ul tău: ${req.user.userId}.` });
+      } else {
+        return sendJSON(res, { message: `Bine ai venit, ${req.user.role}! Ai accesat informații protejate. ID-ul tău: ${req.user.userId}.` });
+      }
+    });
+    return;
+  }
+
+  // If no route matches
+  res.writeHead(404, { 'Access-Control-Allow-Origin': '*' });
+  res.end('Not found');
+}).listen(PORT, () => console.log(`Server fără Express pornit pe http://localhost:${PORT}`));

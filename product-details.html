@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title id="pageTitle">Detalii Produs - Recomandări Dispozitive Electronice</title>
-  <!-- Link Google Fonts for a modern look -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
     /* Definire variabile CSS - Copiat din index.html pentru consistență */
@@ -122,7 +121,7 @@
         color: var(--text-light);
         padding: 13px 25px;
         border: none;
-        border-radius: 25px; 
+        border-radius: 25px;
         cursor: pointer;
         font-size: 1.05em;
         margin-top: 2em;
@@ -141,7 +140,7 @@
         transform: translateY(-3px);
         box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
     }
-    
+
     /* Stil pentru mesajul de încărcare/eroare pe pagina de detalii */
     .loading-message, .error-message {
         text-align: center;
@@ -152,6 +151,15 @@
     }
     .error-message {
         color: var(--accent-color);
+    }
+    /* Stil pentru imaginea pe pagina de detalii */
+    .detail-product-image {
+        max-width: 80%; /* Adjust as needed */
+        height: auto;
+        border-radius: 10px;
+        margin: 1.5em auto; /* Center the image and add vertical spacing */
+        display: block;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     }
 
 
@@ -188,6 +196,7 @@
       #productDetails h2 { font-size: 2em; text-align: center; } /* Centrează titlul pe mobil */
       #productDetails p { font-size: 1.05em; }
        #backToRecommendations { padding: 12px 20px; font-size: 1em; }
+      .detail-product-image { max-width: 90%; }
     }
     @media (max-width: 480px) {
         header h1 { font-size: 1.8em; }
@@ -195,33 +204,27 @@
         #productDetails h2 { font-size: 1.6em; }
         #productDetails p { font-size: 0.95em; }
          #backToRecommendations { padding: 10px 15px; font-size: 0.9em; }
+        .detail-product-image { max-width: 95%; }
     }
   </style>
 </head>
 <body>
   <header>
-     <a href="/"> <!-- Link catre homepage -->
-        <h1>Recomandări Dispozitive Electronice</h1>
+     <a href="/"> <h1>Recomandări Dispozitive Electronice</h1>
      </a>
-     <!-- Butoanele de autentificare/admin sunt doar pe index.html -->
-  </header>
+     </header>
 
   <main>
     <section id="productDetails">
       <button id="backToRecommendations">Înapoi la Recomandări</button>
-      <!-- Conținutul specific produsului va fi populat de JavaScript -->
-      <h2 id="productName">Încărcare...</h2> 
-      <p class="loading-message">Se încarcă detaliile produsului...</p> 
-      <!-- Restul detaliilor vor fi adăugate de JS -->
-    </section>
+      <h2 id="productName">Încărcare...</h2>
+      <p class="loading-message">Se încarcă detaliile produsului...</p>
+      </section>
   </main>
 
   <footer>
     <a href="/rss">RSS Feed</a>
   </footer>
-
-  <!-- Modalele Login/Add/Edit Product NU sunt incluse pe pagina de detalii in aceasta abordare -->
-
 
   <script>
     const productDetailsSection = document.getElementById('productDetails');
@@ -234,7 +237,7 @@
         productNameElement.textContent = 'Încărcare...'; // Reset title
         loadingMessageElement.style.display = 'block'; // Show loading message
         // Clear previous details (except back button and title placeholder)
-         const existingDetails = productDetailsSection.querySelectorAll('p:not(.loading-message), a');
+         const existingDetails = productDetailsSection.querySelectorAll('p:not(.loading-message), a, img'); // Include img
          existingDetails.forEach(el => el.remove());
 
 
@@ -247,7 +250,17 @@
             if (res.ok) {
                 document.getElementById('pageTitle').textContent = `${product.name} - Recomandări Dispozitive Electronice`; // Update page title
                 productNameElement.textContent = product.name;
-                
+
+                // Add image element
+                if (product.image) {
+                    const img = document.createElement('img');
+                    img.src = product.image;
+                    img.alt = product.name;
+                    img.className = 'detail-product-image';
+                    productDetailsSection.appendChild(img);
+                }
+
+
                 // Create and append detail paragraphs
                 const pricePara = document.createElement('p');
                 pricePara.innerHTML = `<strong>Preț:</strong> <span id="productPrice">${product.price}</span> Lei`;
@@ -264,16 +277,16 @@
                  const featuresPara = document.createElement('p');
                  featuresPara.innerHTML = `<strong>Caracteristici:</strong> <span id="productFeatures">${product.features.join(', ')}</span>`;
                  productDetailsSection.appendChild(featuresPara);
-                
+
                 const productLinkElement = document.createElement('a');
                  productLinkElement.id = 'productLink'; // Keep the ID if needed elsewhere, though not used now
-                if (product.link && product.link !== 'null' && product.link.trim() !== '') { 
+                if (product.link && product.link !== 'null' && product.link.trim() !== '') {
                     productLinkElement.href = product.link;
                     productLinkElement.textContent = 'Vizitează pagina produsului';
                     productLinkElement.target = '_blank'; // Open in new tab
                      productDetailsSection.appendChild(document.createElement('p')).appendChild(document.createElement('strong')).textContent = 'Link: '; // Add "Link: " label
                     productDetailsSection.lastChild.appendChild(productLinkElement); // Append the link after the label
-                } 
+                }
 
             } else {
                 // Handle product not found or other API errors
@@ -296,7 +309,7 @@
 
         }
     }
-    
+
     // Event listener pentru butonul "Înapoi la Recomandări"
     backToRecommendationsButton.addEventListener('click', () => {
         window.location.href = '/'; // Navigate back to the homepage
@@ -317,7 +330,7 @@
              errorMessage.className = 'error-message';
              errorMessage.textContent = 'ID-ul produsului nu a fost specificat în adresă.';
              productDetailsSection.appendChild(errorMessage);
-              document.getElementById('pageTitle').textContent = `Eroare - Recomandări Dispozitive Electronice`; 
+              document.getElementById('pageTitle').textContent = `Eroare - Recomandări Dispozitive Electronice`;
         }
     }
 

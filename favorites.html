@@ -84,7 +84,7 @@
         border-radius: 15px;
         box-shadow: 0 6px 20px var(--shadow-light);
     }
-    
+
     #favoritesGrid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -99,8 +99,8 @@
       cursor: pointer;
       position: relative;
       transition: transform 0.3s ease, box-shadow 0.3s ease;
-      display: flex; 
-      flex-direction: column; 
+      display: flex;
+      flex-direction: column;
     }
 
     .device-card:hover {
@@ -109,20 +109,20 @@
     }
 
     .device-actions { /* Stilurile butoanelor de acțiune preluate din index.html */
-        display: flex; 
-        justify-content: flex-end; 
-        gap: 10px; 
-        margin-bottom: 1em; 
-        padding-bottom: 1em; 
-        border-bottom: 1px solid var(--border-color); 
-        z-index: 10; 
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-bottom: 1em;
+        padding-bottom: 1em;
+        border-bottom: 1px solid var(--border-color);
+        z-index: 10;
     }
-    
+
     .device-actions button {
         padding: 9px 14px;
-        border: none; 
+        border: none;
         border-radius: 8px;
-        cursor: pointer; 
+        cursor: pointer;
         font-size: 0.95em;
         font-weight: 500;
         transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
@@ -142,9 +142,22 @@
         background-color: #c82333;
     }
 
+    /* Stiluri pentru imaginea produsului in card */
+    .product-image {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        margin-bottom: 1em;
+        object-fit: contain; /* Ensures the entire image is visible without cropping */
+        max-height: 200px; /* Limit image height in card */
+        display: block; /* Remove extra space below image */
+        margin-left: auto;
+        margin-right: auto;
+    }
+
     .device-card h3 {
-        color: var(--primary-color); 
-        margin-top: 0; 
+        color: var(--primary-color);
+        margin-top: 0;
         margin-bottom: 0.7em;
         font-size: 1.7em;
         font-weight: 600;
@@ -172,7 +185,7 @@
         color: var(--text-light);
         padding: 13px 25px;
         border: none;
-        border-radius: 25px; 
+        border-radius: 25px;
         cursor: pointer;
         font-size: 1.05em;
         margin-top: 2em;
@@ -312,7 +325,7 @@
                 div.dataset.productId = device.id;
 
                 const actionsDiv = document.createElement('div');
-                actionsDiv.className = 'device-actions'; 
+                actionsDiv.className = 'device-actions';
 
                 const removeFavoriteButton = document.createElement('button');
                 removeFavoriteButton.textContent = 'Elimină din Favorite';
@@ -326,6 +339,15 @@
                 });
                 actionsDiv.appendChild(removeFavoriteButton);
                 div.insertBefore(actionsDiv, div.firstChild);
+
+                // Add image element
+                if (device.image) {
+                    const img = document.createElement('img');
+                    img.src = device.image;
+                    img.alt = device.name;
+                    img.className = 'product-image';
+                    div.appendChild(img);
+                }
 
                 const contentHTML = `
                   <h3>${device.name}</h3>

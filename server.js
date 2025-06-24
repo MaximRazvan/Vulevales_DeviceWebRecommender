@@ -94,7 +94,7 @@ function serveStatic(res, pathname) {
             res.end('Not found');
          }
     } else {
-         if (!res.headersSent) { 
+         if (!res.headersSent) {
             const ext = path.extname(finalPath);
             const contentType = {
                 '.html': 'text/html',
@@ -192,6 +192,27 @@ async function scrapeProductPage(productUrl) {
         else if (productUrl.includes('laptop')) type = 'laptop';
         else if (productUrl.includes('casti')) type = 'casti';
 
+        // Extract image URL
+        let imageUrl = $('meta[property="og:image"]').attr('content');
+        if (!imageUrl) {
+            imageUrl = $('img.product-main-image').attr('src'); // Common image selector
+        }
+        if (!imageUrl) {
+            imageUrl = $('img[itemprop="image"]').attr('src'); // Schema.org image selector
+        }
+        if (!imageUrl) {
+             imageUrl = $('a.thumbnail img').attr('src'); // Example for thumbnail images
+        }
+        // Ensure the image URL is absolute
+        if (imageUrl && !imageUrl.startsWith('http')) {
+            try {
+                imageUrl = new URL(imageUrl, productUrl).href;
+            } catch (e) {
+                console.warn(`Could not resolve relative image URL: ${imageUrl}`);
+                imageUrl = null;
+            }
+        }
+
 
         // Returnează un obiect cu datele extrase
         return {
@@ -200,7 +221,8 @@ async function scrapeProductPage(productUrl) {
             batterylife: batteryLife,
             type: type || 'necunoscut',
             features: features.length > 0 ? features : ['Caracteristici N/A'],
-            link: productUrl
+            link: productUrl,
+            image: imageUrl || null // Add the image URL here
         };
 
     } catch (error) {
@@ -237,7 +259,7 @@ http.createServer(async (req, res) => {
   if (req.method === 'GET' && pathname === '/api/recommendations') {
     const { q = '', minPrice, maxPrice, batteryLife, deviceType } = parsedUrl.query;
 
-    let queryText = 'SELECT id, name, price, batterylife, type, features, link FROM products WHERE 1=1';
+    let queryText = 'SELECT id, name, price, batterylife, type, features, link, image FROM products WHERE 1=1'; // Added 'image'
     const queryParams = [];
     let paramIndex = 1;
 
@@ -251,10 +273,10 @@ http.createServer(async (req, res) => {
     }
     if (batteryLife) {
         if (batteryLife > 0) {
-             queryText += ` AND batterylife >= $${paramIndex++}`; 
-             queryParams.push(parseFloat(batteryLife)); 
+             queryText += ` AND batterylife >= $${paramIndex++}`;
+             queryParams.push(parseFloat(batteryLife));
         } else if (batteryLife === '0') {
-             queryText += ` AND batterylife = 0`; 
+             queryText += ` AND batterylife = 0`;
         }
     }
     if (deviceType) {
@@ -268,7 +290,7 @@ http.createServer(async (req, res) => {
         queryParams.push(searchTerm, searchTerm);
     }
 
-    queryText += ' ORDER BY id ASC'; 
+    queryText += ' ORDER BY id ASC';
 
     try {
         const { rows } = await pool.query(queryText, queryParams);
@@ -287,7 +309,7 @@ http.createServer(async (req, res) => {
         return sendJSON(res, { message: 'ID produs invalid.' }, 400);
     }
     try {
-        const { rows } = await pool.query('SELECT id, name, price, batterylife, type, features, link FROM products WHERE id = $1', [productId]);
+        const { rows } = await pool.query('SELECT id, name, price, batterylife, type, features, link, image FROM products WHERE id = $1', [productId]); // Added 'image'
         if (rows.length > 0) {
             return sendJSON(res, rows[0]);
         } else {
@@ -301,42 +323,42 @@ http.createServer(async (req, res) => {
 
   // --- API Endpoint: Add New Product (Admin only) ---
   if (req.method === 'POST' && pathname === '/api/products') {
-    return authenticateToken(req, res, async () => { 
+    return authenticateToken(req, res, async () => {
       if (req.user.role !== 'admin') {
-        return sendJSON(res, { message: 'Acces interzis. Doar administratorii pot adăuga produse.' }, 403); 
+        return sendJSON(res, { message: 'Acces interzis. Doar administratorii pot adăuga produse.' }, 403);
       }
 
       try {
-        const { name, price, batteryLife, type, features, link } = await parseBody(req);
+        const { name, price, batteryLife, type, features, link, image } = await parseBody(req); // Added 'image'
 
         if (!name || typeof name !== 'string' || name.trim() === '') {
-            return sendJSON(res, { message: 'Numele produsului este obligatoriu.' }, 400); 
+            return sendJSON(res, { message: 'Numele produsului este obligatoriu.' }, 400);
         }
          const parsedPrice = parseFloat(price);
          if (isNaN(parsedPrice) || parsedPrice <= 0) {
-             return sendJSON(res, { message: 'Prețul produsului trebuie să fie un număr pozitiv valid.' }, 400); 
+             return sendJSON(res, { message: 'Prețul produsului trebuie să fie un număr pozitiv valid.' }, 400);
          }
          if (!type || typeof type !== 'string' || type.trim() === '') {
-             return sendJSON(res, { message: 'Tipul produsului este obligatoriu.' }, 400); 
+             return sendJSON(res, { message: 'Tipul produsului este obligatoriu.' }, 400);
          }
-         const featuresArray = Array.isArray(features) 
-            ? features.map(f => String(f).trim()).filter(f => f.length > 0) 
+         const featuresArray = Array.isArray(features)
+            ? features.map(f => String(f).trim()).filter(f => f.length > 0)
             : (typeof features === 'string' ? features.split(',').map(f => f.trim()).filter(f => f.length > 0) : []);
          if (featuresArray.length === 0) {
-             return sendJSON(res, { message: 'Caracteristicile produsului sunt obligatorii (cel puțin una).' }, 400); 
+             return sendJSON(res, { message: 'Caracteristicile produsului sunt obligatorii (cel puțin una).' }, 400);
          }
         const parsedBatteryLife = batteryLife ? parseInt(batteryLife, 10) : null;
         const parsedLink = link && typeof link === 'string' && link.trim() !== '' ? link.trim() : null;
-
+        const parsedImage = image && typeof image === 'string' && image.trim() !== '' ? image.trim() : null; // Handle image
 
         const result = await pool.query(
-          'INSERT INTO products (name, price, batterylife, type, features, link) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, name',
-          [name.trim(), parsedPrice, parsedBatteryLife, type.trim(), featuresArray, parsedLink]
+          'INSERT INTO products (name, price, batterylife, type, features, link, image) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, name', // Added 'image'
+          [name.trim(), parsedPrice, parsedBatteryLife, type.trim(), featuresArray, parsedLink, parsedImage] // Added parsedImage
         );
-        return sendJSON(res, { message: 'Produs adăugat cu succes!', product: result.rows[0] }, 201); 
+        return sendJSON(res, { message: 'Produs adăugat cu succes!', product: result.rows[0] }, 201);
       } catch (error) {
         console.error('SERVER ERROR adding product:', error.message, error.stack);
-        return sendJSON(res, { message: 'Eroare de server la adăugarea produsului.', error: error.message }, 500); 
+        return sendJSON(res, { message: 'Eroare de server la adăugarea produsului.', error: error.message }, 500);
       }
     });
   }
@@ -344,42 +366,42 @@ http.createServer(async (req, res) => {
   // --- API Endpoint: Update Product (Admin only) ---
   const updateProductMatch = pathname.match(/^\/api\/products\/(\d+)$/);
   if (req.method === 'PUT' && updateProductMatch) {
-    return authenticateToken(req, res, async () => { 
+    return authenticateToken(req, res, async () => {
       if (req.user.role !== 'admin') {
-        return sendJSON(res, { message: 'Acces interzis. Doar administratorii pot edita produse.' }, 403); 
+        return sendJSON(res, { message: 'Acces interzis. Doar administratorii pot edita produse.' }, 403);
       }
 
       const productId = parseInt(updateProductMatch[1], 10);
       if (isNaN(productId)) {
-        return sendJSON(res, { message: 'ID produs invalid.' }, 400); 
+        return sendJSON(res, { message: 'ID produs invalid.' }, 400);
       }
 
       try {
-        const { name, price, batteryLife, type, features, link } = await parseBody(req);
+        const { name, price, batteryLife, type, features, link, image } = await parseBody(req); // Added 'image'
 
          if (!name || typeof name !== 'string' || name.trim() === '') {
-             return sendJSON(res, { message: 'Numele produsului este obligatoriu.' }, 400); 
+             return sendJSON(res, { message: 'Numele produsului este obligatoriu.' }, 400);
          }
           const parsedPrice = parseFloat(price);
           if (isNaN(parsedPrice) || parsedPrice <= 0) {
-              return sendJSON(res, { message: 'Prețul produsului trebuie să fie un număr pozitiv valid.' }, 400); 
+              return sendJSON(res, { message: 'Prețul produsului trebuie să fie un număr pozitiv valid.' }, 400);
           }
           if (!type || typeof type !== 'string' || type.trim() === '') {
-              return sendJSON(res, { message: 'Tipul produsului este obligatoriu.' }, 400); 
+              return sendJSON(res, { message: 'Tipul produsului este obligatoriu.' }, 400);
           }
-          const featuresArray = Array.isArray(features) 
-             ? features.map(f => String(f).trim()).filter(f => f.length > 0) 
+          const featuresArray = Array.isArray(features)
+             ? features.map(f => String(f).trim()).filter(f => f.length > 0)
              : (typeof features === 'string' ? features.split(',').map(f => f.trim()).filter(f => f.length > 0) : []);
           if (featuresArray.length === 0) {
-              return sendJSON(res, { message: 'Caracteristicile produsului sunt obligatorii (cel puțin una).' }, 400); 
+              return sendJSON(res, { message: 'Caracteristicile produsului sunt obligatorii (cel puțin una).' }, 400);
           }
          const parsedBatteryLife = batteryLife ? parseInt(batteryLife, 10) : null;
          const parsedLink = link && typeof link === 'string' && link.trim() !== '' ? link.trim() : null;
-
+         const parsedImage = image && typeof image === 'string' && image.trim() !== '' ? image.trim() : null; // Handle image
 
         const result = await pool.query(
-          'UPDATE products SET name = $1, price = $2, batterylife = $3, type = $4, features = $5, link = $6 WHERE id = $7 RETURNING id, name',
-          [name.trim(), parsedPrice, parsedBatteryLife, type.trim(), featuresArray, parsedLink, productId]
+          'UPDATE products SET name = $1, price = $2, batterylife = $3, type = $4, features = $5, link = $6, image = $7 WHERE id = $8 RETURNING id, name', // Added 'image'
+          [name.trim(), parsedPrice, parsedBatteryLife, type.trim(), featuresArray, parsedLink, parsedImage, productId] // Added parsedImage
         );
 
         if (result.rows.length > 0) {
@@ -397,14 +419,14 @@ http.createServer(async (req, res) => {
   // --- API Endpoint: Delete Product (Admin only) ---
   const deleteProductMatch = pathname.match(/^\/api\/products\/(\d+)$/);
   if (req.method === 'DELETE' && deleteProductMatch) {
-    return authenticateToken(req, res, async () => { 
+    return authenticateToken(req, res, async () => {
       if (req.user.role !== 'admin') {
-        return sendJSON(res, { message: 'Acces interzis. Doar administratorii pot șterge produse.' }, 403); 
+        return sendJSON(res, { message: 'Acces interzis. Doar administratorii pot șterge produse.' }, 403);
       }
 
       const productId = parseInt(deleteProductMatch[1], 10);
       if (isNaN(productId)) {
-        return sendJSON(res, { message: 'ID produs invalid.' }, 400); 
+        return sendJSON(res, { message: 'ID produs invalid.' }, 400);
       }
 
       try {
@@ -428,7 +450,7 @@ http.createServer(async (req, res) => {
         const { limit } = parsedUrl.query;
         const queryLimit = (limit && parseInt(limit, 10) > 0) ? parseInt(limit, 10) : 100;
 
-        let queryText = 'SELECT id, name, price, batterylife, type, features, link, created_at FROM products ORDER BY created_at DESC';
+        let queryText = 'SELECT id, name, price, batterylife, type, features, link, created_at, image FROM products ORDER BY created_at DESC'; // Added 'image'
         const queryParams = [];
 
         if (queryLimit > 0) {
@@ -439,10 +461,10 @@ http.createServer(async (req, res) => {
         const { rows } = await pool.query(queryText, queryParams);
 
         const feed = new RSS({
-          title: 'Ultimele Recomandări de Dispozitive Electronice', 
-          description: 'Cele mai recent adăugate dispozitive electronice', 
+          title: 'Ultimele Recomandări de Dispozitive Electronice',
+          description: 'Cele mai recent adăugate dispozitive electronice',
           feed_url: `http://localhost:${PORT}/rss`,
-          site_url: `http://localhost:${PORT}`, 
+          site_url: `http://localhost:${PORT}`,
           language: 'ro'
         });
 
@@ -450,9 +472,10 @@ http.createServer(async (req, res) => {
           feed.item({
             title: d.name,
             description: `Preț: ${d.price} Lei, Autonomie: ${d.batterylife ? d.batterylife + ' ore' : 'N/A'}, Tip: ${d.type}, Caracteristici: ${d.features.join(', ')}`,
-            url: d.link && d.link !== 'null' && d.link.trim() !== '' ? d.link : `http://localhost:<span class="math-inline">\{PORT\}/?product\_id\=</span>{d.id}`, 
-            date: d.created_at || new Date(), 
-            guid: d.id 
+            url: d.link && d.link !== 'null' && d.link.trim() !== '' ? d.link : `http://localhost:${PORT}/?product_id=${d.id}`,
+            date: d.created_at || new Date(),
+            guid: d.id,
+            enclosure: d.image ? { url: d.image, type: 'image/jpeg' } : undefined // Add image to RSS feed
           });
         });
 
@@ -467,7 +490,7 @@ http.createServer(async (req, res) => {
   // --- API Endpoint: User Registration ---
   if (req.method === 'POST' && pathname === '/api/register') {
     try {
-      const { username, password, role } = await parseBody(req); 
+      const { username, password, role } = await parseBody(req);
 
       if (!username || !password) {
         return sendJSON(res, { message: 'Numele de utilizator și parola sunt obligatorii.' }, 400);
@@ -501,10 +524,10 @@ http.createServer(async (req, res) => {
               console.log(`Permitting first user "${username}" to register as admin.`);
           } else {
               console.warn(`Attempted admin registration for "${username}" but admin already exists.`);
-              finalRole = 'user'; 
+              finalRole = 'user';
           }
       } else {
-          finalRole = 'user'; 
+          finalRole = 'user';
       }
 
 
@@ -513,12 +536,12 @@ http.createServer(async (req, res) => {
 
       const result = await pool.query(
         'INSERT INTO users (username, password_hash, role) VALUES ($1, $2, $3) RETURNING id, username, role',
-        [username, passwordHash, finalRole] 
+        [username, passwordHash, finalRole]
       );
 
       const newUser = result.rows[0];
-      const message = finalRole === 'admin' 
-        ? 'Utilizator admin înregistrat cu succes! (Sunteți primul admin)' 
+      const message = finalRole === 'admin'
+        ? 'Utilizator admin înregistrat cu succes! (Sunteți primul admin)'
         : 'Utilizator înregistrat cu succes!';
 
       return sendJSON(res, { message: message, user: { id: newUser.id, username: newUser.username, role: newUser.role } }, 201);
@@ -554,7 +577,7 @@ http.createServer(async (req, res) => {
       const token = jwt.sign(
         { userId: user.id, role: user.role },
         JWT_SECRET,
-        { expiresIn: '1m' } 
+        { expiresIn: '1m' }
       );
 
       return sendJSON(res, { message: 'Conectat cu succes!', token, role: user.role, username: user.username });
@@ -567,7 +590,7 @@ http.createServer(async (req, res) => {
 
   // --- Protected API Endpoint (Example) ---
   if (req.method === 'GET' && pathname === '/api/protected-info') {
-    return authenticateToken(req, res, () => { 
+    return authenticateToken(req, res, () => {
       if (req.user.role === 'admin') {
         return sendJSON(res, { message: `Bine ai venit, ${req.user.role}! Ai accesat informații protejate (admin). ID-ul tău: ${req.user.userId}.` });
       } else {
@@ -640,7 +663,7 @@ http.createServer(async (req, res) => {
 
       try {
         const { rows } = await pool.query(
-          `SELECT p.id, p.name, p.price, p.batterylife, p.type, p.features, p.link
+          `SELECT p.id, p.name, p.price, p.batterylife, p.type, p.features, p.link, p.image
            FROM products p
            JOIN user_favorites uf ON p.id = uf.product_id
            WHERE uf.user_id = $1
@@ -707,8 +730,8 @@ http.createServer(async (req, res) => {
 
               // Inseră produsul scrapuit în baza de date
               const result = await pool.query(
-                  'INSERT INTO products (name, price, batterylife, type, features, link) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, name',
-                  [scrapedData.name, scrapedData.price, scrapedData.batterylife, scrapedData.type, scrapedData.features, scrapedData.link]
+                  'INSERT INTO products (name, price, batterylife, type, features, link, image) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, name', // Added 'image'
+                  [scrapedData.name, scrapedData.price, scrapedData.batterylife, scrapedData.type, scrapedData.features, scrapedData.link, scrapedData.image] // Added scrapedData.image
               );
 
               return sendJSON(res, { message: 'Produs scrapuit și adăugat cu succes!', product: result.rows[0] }, 201);

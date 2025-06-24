@@ -21,18 +21,21 @@ const pool = new Pool({
   // Înlocuiește aceste valori cu credențialele REALE ALE BAZEI DE DATE de la Supabase.
   // Acestea le găsești în dashboard-ul Supabase, secțiunea:
   // Project Settings -> Database -> Connection string -> Node.js
-  // Cheia 'anon' pe care ai furnizat-o NU este parola bazei de date.
+  // Cheia 'anon' sau 'service_role' NU este parola bazei de date.
 
   user: 'postgres', // De obicei este 'postgres'
-  host: 'db.wpbeibnkbpwbnvuaqssj.supabase.co', // <--- FOLOSIM HOST-UL SPECIFICAT
+  host: 'db.wpbeibnkbpwbnvuaqssj.supabase.co', // Folosește host-ul specificat (verifică-l în dashboard)
   database: 'postgres', // De obicei este 'postgres'
-  password: 'postgres', // <--- !!! ÎNLOCUIEȘTE ACEASTA CU PAROLA TA REALĂ A BAZEI DE DATE SUPABASE !!!
+  password: 'YOUR_SUPABASE_DATABASE_PASSWORD', // <--- !!! ÎNLOCUIEȘTE ACEASTA CU PAROLA TA REALĂ A BAZEI DE DATE SUPABASE !!!
   port: 5432, // Default PostgreSQL port
 
   // Supabase necesită conexiune SSL
   ssl: {
-      rejectUnauthorized: false // Setează true în producție dacă ai certificat, false pentru dezvoltare
-  }
+      rejectUnauthorized: false // Setează true în producție dacă ai certificat valid, false pentru dezvoltare locală sau Render
+  },
+
+  // NOU: Forțează conexiunea să folosească doar IPv4, rezolvă eroarea ENETUNREACH la IPv6 pe unele platforme de hosting (ex: Render)
+  family: 4
 });
 
 // Test database connection

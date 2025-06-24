@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title id="pageTitle">Detalii Produs - Recomandări Dispozitive Electronice</title>
+  <!-- Link Google Fonts for a modern look -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    /* Definire variabile CSS - Copiat din index.html pentru consistență */
+    :root {
+      --primary-color: #4CAF50; /* Verde intens - pentru acțiuni pozitive, highlight */
+      --secondary-color: #007bff; /* Albastru - pentru acțiuni principale, titluri, link-uri */
+      --accent-color: #f44336; /* Roșu - pentru acțiuni de avertizare/ștergere */
+      --neutral-dark: #2c3e50; /* Gri-albăstrui închis - pentru fundaluri întunecate (header, footer) */
+      --neutral-light: #ecf0f1; /* Gri deschis - pentru fundalul principal al paginii */
+      --text-dark: #34495e; /* Gri-albăstrui închis - pentru text principal */
+      --text-light: #ffffff; /* Alb - pentru text pe fundal întunecat */
+      --border-color: #bdc3c7; /* Gri deschis pentru borduri */
+      --shadow-light: rgba(0, 0, 0, 0.08); /* Umbra ușoară */
+      --shadow-medium: rgba(0, 0, 0, 0.15); /* Umbra medie */
+    }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: var(--neutral-light);
+      color: var(--text-dark);
+      line-height: 1.6;
+    }
+
+    header { /* Copiat din index.html */
+      background-color: var(--neutral-dark);
+      padding: 1.5em 1em;
+      color: var(--text-light);
+      text-align: center;
+      position: relative;
+      box-shadow: 0 4px 10px var(--shadow-medium);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5em;
+    }
+    header a { /* Stil specific pentru linkul din header */
+        color: inherit; /* Moștenește culoarea textului din header */
+        text-decoration: none; /* Fără subliniere */
+    }
+    header a:hover {
+         text-decoration: underline;
+    }
+
+
+    header h1 { /* Copiat din index.html */
+        font-family: 'Poppins', sans-serif;
+        margin: 0;
+        font-size: 2.8em;
+        color: var(--primary-color);
+        letter-spacing: -0.03em;
+    }
+
+    /* Container pentru butoanele de autentificare și administrare - ELIMINAT din pagina de detalii */
+    /* Căutare și Filtre - ELIMINAT din pagina de detalii */
+
+    /* Conținut Principal */
+    main {
+      padding: 3em 1.5em;
+      max-width: 900px; /* Lățime adaptată pentru pagina de detalii */
+      margin: 0 auto;
+    }
+
+    section {
+      margin-bottom: 3.5em;
+    }
+
+     /* Secțiunea Detalii Produs */
+    #productDetails {
+        background-color: var(--text-light);
+        padding: 3em;
+        border-radius: 15px;
+        box-shadow: 0 6px 20px var(--shadow-light);
+        /* Eliminat max-width și margin, acum le gestionează main */
+        /* Eliminat display: none; */
+    }
+
+    #productDetails h2 { /* Copiat din index.html */
+        color: var(--primary-color);
+        margin-bottom: 1.5em;
+        font-size: 2.5em;
+        font-weight: 600;
+        text-transform: capitalize;
+        text-align: left; /* Aliniază titlul la stânga pe pagina de detalii */
+        letter-spacing: normal; /* Elimină spațierea literelor pentru nume de produs */
+    }
+
+    #productDetails p { /* Copiat din index.html */
+        margin-bottom: 1em;
+        line-height: 1.7;
+        font-size: 1.15em;
+        color: #444;
+    }
+
+    #productDetails strong { /* Copiat din index.html */
+        color: var(--text-dark);
+        font-weight: 600;
+    }
+
+    #productDetails a { /* Copiat din index.html */
+        color: var(--secondary-color);
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.2s ease, text-decoration 0.2s ease;
+    }
+
+    #productDetails a:hover { /* Copiat din index.html */
+        text-decoration: underline;
+        color: #0056b3;
+    }
+
+    #backToRecommendations { /* Copiat din index.html */
+        background-color: #6c757d;
+        color: var(--text-light);
+        padding: 13px 25px;
+        border: none;
+        border-radius: 25px; 
+        cursor: pointer;
+        font-size: 1.05em;
+        margin-top: 2em;
+        display: block;
+        width: fit-content;
+        /* Eliminat margin-left/right auto */
+        margin-bottom: 1.5em; /* Spațiu sub butonul înapoi */
+        transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    #backToRecommendations:hover { /* Copiat din index.html */
+        background-color: #5a6268;
+        transform: translateY(-3px);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+    }
+    
+    /* Stil pentru mesajul de încărcare/eroare pe pagina de detalii */
+    .loading-message, .error-message {
+        text-align: center;
+        font-style: italic;
+        color: #888;
+        margin-top: 2.5em;
+        font-size: 1.2em;
+    }
+    .error-message {
+        color: var(--accent-color);
+    }
+
+
+    /* Footer - Copiat din index.html */
+    footer {
+      background-color: var(--neutral-dark);
+      color: var(--text-light);
+      text-align: center;
+      padding: 1.8em;
+      box-shadow: 0 -4px 10px var(--shadow-medium);
+      font-size: 1.1em;
+    }
+
+    footer a { /* Copiat din index.html */
+        color: var(--primary-color);
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.2s ease;
+    }
+
+    footer a:hover { /* Copiat din index.html */
+        color: #3f9442;
+        text-decoration: underline;
+    }
+     /* Stiluri Modal - ELIMINAT din pagina de detalii */
+
+    /* Design Responsiv - Adaptat din index.html */
+    @media (max-width: 768px) {
+      header { padding: 1.5em 0.8em; gap: 1.2em; }
+      header h1 { font-size: 2.2em; }
+      header a { display: block; width: fit-content; margin: 0.5em auto 0; } /* Centrează linkul titlului pe mobil */
+      main { padding: 2em 0.8em; }
+      #productDetails { padding: 2em; }
+      #productDetails h2 { font-size: 2em; text-align: center; } /* Centrează titlul pe mobil */
+      #productDetails p { font-size: 1.05em; }
+       #backToRecommendations { padding: 12px 20px; font-size: 1em; }
+    }
+    @media (max-width: 480px) {
+        header h1 { font-size: 1.8em; }
+        #productDetails { padding: 1.5em; }
+        #productDetails h2 { font-size: 1.6em; }
+        #productDetails p { font-size: 0.95em; }
+         #backToRecommendations { padding: 10px 15px; font-size: 0.9em; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+     <a href="/"> <!-- Link catre homepage -->
+        <h1>Recomandări Dispozitive Electronice</h1>
+     </a>
+     <!-- Butoanele de autentificare/admin sunt doar pe index.html -->
+  </header>
+
+  <main>
+    <section id="productDetails">
+      <button id="backToRecommendations">Înapoi la Recomandări</button>
+      <!-- Conținutul specific produsului va fi populat de JavaScript -->
+      <h2 id="productName">Încărcare...</h2> 
+      <p class="loading-message">Se încarcă detaliile produsului...</p> 
+      <!-- Restul detaliilor vor fi adăugate de JS -->
+    </section>
+  </main>
+
+  <footer>
+    <a href="/rss">RSS Feed</a>
+  </footer>
+
+  <!-- Modalele Login/Add/Edit Product NU sunt incluse pe pagina de detalii in aceasta abordare -->
+
+
+  <script>
+    const productDetailsSection = document.getElementById('productDetails');
+    const backToRecommendationsButton = document.getElementById('backToRecommendations');
+    const productNameElement = document.getElementById('productName');
+    const loadingMessageElement = productDetailsSection.querySelector('.loading-message'); // Get the loading message element
+
+    // Function to display single product details
+    async function displayProductDetails(productId) {
+        productNameElement.textContent = 'Încărcare...'; // Reset title
+        loadingMessageElement.style.display = 'block'; // Show loading message
+        // Clear previous details (except back button and title placeholder)
+         const existingDetails = productDetailsSection.querySelectorAll('p:not(.loading-message), a');
+         existingDetails.forEach(el => el.remove());
+
+
+        try {
+            const res = await fetch(`/api/products/${productId}`);
+            const product = await res.json();
+
+            loadingMessageElement.style.display = 'none'; // Hide loading message
+
+            if (res.ok) {
+                document.getElementById('pageTitle').textContent = `${product.name} - Recomandări Dispozitive Electronice`; // Update page title
+                productNameElement.textContent = product.name;
+                
+                // Create and append detail paragraphs
+                const pricePara = document.createElement('p');
+                pricePara.innerHTML = `<strong>Preț:</strong> <span id="productPrice">${product.price}</span> Lei`;
+                productDetailsSection.appendChild(pricePara);
+
+                const batteryPara = document.createElement('p');
+                batteryPara.innerHTML = `<strong>Autonomie baterie:</strong> <span id="productBatteryLife">${product.batterylife ? `${product.batterylife} ore` : 'N/A'}</span>`;
+                productDetailsSection.appendChild(batteryPara);
+
+                const typePara = document.createElement('p');
+                 typePara.innerHTML = `<strong>Tip:</strong> <span id="productType">${product.type}</span>`;
+                 productDetailsSection.appendChild(typePara);
+
+                 const featuresPara = document.createElement('p');
+                 featuresPara.innerHTML = `<strong>Caracteristici:</strong> <span id="productFeatures">${product.features.join(', ')}</span>`;
+                 productDetailsSection.appendChild(featuresPara);
+                
+                const productLinkElement = document.createElement('a');
+                 productLinkElement.id = 'productLink'; // Keep the ID if needed elsewhere, though not used now
+                if (product.link && product.link !== 'null' && product.link.trim() !== '') { 
+                    productLinkElement.href = product.link;
+                    productLinkElement.textContent = 'Vizitează pagina produsului';
+                    productLinkElement.target = '_blank'; // Open in new tab
+                     productDetailsSection.appendChild(document.createElement('p')).appendChild(document.createElement('strong')).textContent = 'Link: '; // Add "Link: " label
+                    productDetailsSection.lastChild.appendChild(productLinkElement); // Append the link after the label
+                } 
+
+            } else {
+                // Handle product not found or other API errors
+                 productNameElement.textContent = 'Eroare'; // Set title to Error
+                 const errorMessage = document.createElement('p');
+                 errorMessage.className = 'error-message';
+                 errorMessage.textContent = `Eroare la încărcarea produsului: ${product.message || `Produsul cu ID ${productId} nu a fost găsit.`}`;
+                 productDetailsSection.appendChild(errorMessage);
+                 document.getElementById('pageTitle').textContent = `Eroare - Recomandări Dispozitive Electronice`; // Update page title
+            }
+        } catch (error) {
+            console.error('Eroare la preluarea detaliilor produsului:', error);
+             loadingMessageElement.style.display = 'none'; // Hide loading message
+             productNameElement.textContent = 'Eroare'; // Set title to Error
+             const errorMessage = document.createElement('p');
+             errorMessage.className = 'error-message';
+             errorMessage.textContent = 'A apărut o eroare la încărcarea detaliilor produsului. Verificați conexiunea.';
+             productDetailsSection.appendChild(errorMessage);
+             document.getElementById('pageTitle').textContent = `Eroare - Recomandări Dispozitive Electronice`; // Update page title
+
+        }
+    }
+    
+    // Event listener pentru butonul "Înapoi la Recomandări"
+    backToRecommendationsButton.addEventListener('click', () => {
+        window.location.href = '/'; // Navigate back to the homepage
+    });
+
+    // --- Logică la încărcarea paginii de detalii ---
+    function handleProductDetailsPageLoad() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const productId = urlParams.get('product_id');
+
+        if (productId) {
+            displayProductDetails(productId);
+        } else {
+            // Handle case where product_id is missing from URL
+            productNameElement.textContent = 'Eroare';
+             loadingMessageElement.style.display = 'none'; // Hide loading
+             const errorMessage = document.createElement('p');
+             errorMessage.className = 'error-message';
+             errorMessage.textContent = 'ID-ul produsului nu a fost specificat în adresă.';
+             productDetailsSection.appendChild(errorMessage);
+              document.getElementById('pageTitle').textContent = `Eroare - Recomandări Dispozitive Electronice`; 
+        }
+    }
+
+    // Execută logica la încărcarea paginii de detalii
+    handleProductDetailsPageLoad();
+
+    // Modalele Login/Add/Edit Product NU sunt incluse in acest fisier.
+    // Daca vrei sa le incluzi, va trebui sa copiezi si codul aferent JS si HTML din index.html
+    // dar pentru o pagina simpla de detalii, de obicei nu e necesar sa ai toate modalele.
+
+  </script>
+</body>
+</html>

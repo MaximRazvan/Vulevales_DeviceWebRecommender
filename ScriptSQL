@@ -1,0 +1,31 @@
+-- Tabelul users
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    role VARCHAR(50) DEFAULT 'user' NOT NULL, -- 'user' sau 'admin'
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabelul products
+CREATE TABLE products (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    price NUMERIC(10, 2) NOT NULL,
+    batterylife INT, -- Autonomia bateriei în ore, poate fi NULL
+    type VARCHAR(100) NOT NULL, -- Ex: 'telefon', 'tableta', 'laptop', etc.
+    features TEXT[], -- Un array de stringuri pentru caracteristici (PostgreSQL specific)
+    link VARCHAR(255), -- Link către pagina produsului (poate fi NULL)
+    image VARCHAR(255), -- URL-ul imaginii produsului (poate fi NULL)
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabelul user_favorites (tabel de legătură pentru many-to-many)
+CREATE TABLE user_favorites (
+    user_id INT NOT NULL,
+    product_id INT NOT NULL,
+    favorited_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, product_id), -- Cheie primară compusă
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+);

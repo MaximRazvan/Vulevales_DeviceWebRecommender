@@ -9,7 +9,7 @@ const jwt = require('jsonwebtoken');
 const RSS = require('rss');
 
 const PORT = 3000;
-const JWT_SECRET = process.env.JWT_SECRET || 'your_super_secret_jwt_key_12345'; // Secret JWT
+const JWT_SECRET = process.env.JWT_SECRET || 'your_super_secret_jwt_key_12345'; // Secret JWT - SCHIMBĂ ASTA ÎNTR-O CHEIE UNICĂ ȘI SIGURĂ ÎN PRODUCȚIE!
 
 // --- PostgreSQL Database Configuration ---
 const pool = new Pool({
@@ -32,7 +32,13 @@ pool.connect((err, client, done) => {
 
 // --- Helper to send JSON responses ---
 function sendJSON(res, data, status = 200) {
-  res.writeHead(status, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Content-Type, Authorization' });
+  // Adăugăm o verificare pentru a preveni trimiterea headers-urilor dacă au fost deja trimise
+  if (res.headersSent) {
+    console.warn('Attempted to send headers twice!');
+    // Poți adăuga o logică alternativă aici, cum ar fi să loghezi eroarea
+    return; // Oprește execuția funcției dacă headers-urile au fost trimise
+  }
+  res.writeHead(status, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type, Authorization' });
   res.end(JSON.stringify(data));
 }
 
@@ -58,6 +64,12 @@ function parseBody(req) {
 
 // --- Helper to serve static files from 'public' directory ---
 function serveStatic(res, pathname) {
+  // Dacă headers-urile au fost deja trimise, nu continua
+   if (res.headersSent) {
+        console.warn('Attempted to serve static file after headers sent!');
+        return;
+    }
+
   // If the path is just '/', serve index.html, otherwise serve the requested file
   const filePath = path.join(__dirname, 'public', pathname === '/' ? 'index.html' : pathname);
   
@@ -72,42 +84,50 @@ function serveStatic(res, pathname) {
             if (err2) {
                 // If file not found in both, try to serve index.html for SPA fallback
                 if (err2.code === 'ENOENT' && pathname !== '/index.html') {
+                    // !!! Asigură-te că fallback-ul nu re-declanșează eroarea de headers trimise
+                    // Aici apelăm serveStatic din nou, care are verificarea `res.headersSent`
                     return serveStatic(res, '/index.html'); // Fallback to index.html
                 }
-                res.writeHead(404, { 'Access-Control-Allow-Origin': '*' });
-                res.end('Not found');
+                 if (!res.headersSent) { // Verifică din nou înainte de a scrie 404
+                    res.writeHead(404, { 'Access-Control-Allow-Origin': '*' });
+                    res.end('Not found');
+                 }
             } else {
-                const ext = path.extname(filePath);
-                const contentType = {
-                    '.html': 'text/html',
-                    '.css': 'text/css',
-                    '.js': 'application/javascript',
-                    '.json': 'application/json',
-                    '.ico': 'image/x-icon',
-                    '.png': 'image/png',
-                    '.jpg': 'image/jpeg',
-                    '.gif': 'image/gif',
-                    '.svg': 'image/svg+xml',
-                }[ext] || 'text/plain'; // Default to plain text
-                res.writeHead(200, { 'Content-Type': contentType, 'Access-Control-Allow-Origin': '*' });
-                res.end(data2);
+                 if (!res.headersSent) { // Verifică din nou înainte de a scrie 200
+                    const ext = path.extname(filePath);
+                    const contentType = {
+                        '.html': 'text/html',
+                        '.css': 'text/css',
+                        '.js': 'application/javascript',
+                        '.json': 'application/json',
+                        '.ico': 'image/x-icon',
+                        '.png': 'image/png',
+                        '.jpg': 'image/jpeg',
+                        '.gif': 'image/gif',
+                        '.svg': 'image/svg+xml',
+                    }[ext] || 'text/plain'; // Default to plain text
+                    res.writeHead(200, { 'Content-Type': contentType, 'Access-Control-Allow-Origin': '*' });
+                    res.end(data2);
+                 }
             }
         });
     } else {
-        const ext = path.extname(rootFilePath);
-        const contentType = {
-            '.html': 'text/html',
-            '.css': 'text/css',
-            '.js': 'application/javascript',
-            '.json': 'application/json',
-            '.ico': 'image/x-icon',
-            '.png': 'image/png',
-            '.jpg': 'image/jpeg',
-            '.gif': 'image/gif',
-            '.svg': 'image/svg+xml',
-        }[ext] || 'text/plain'; // Default to plain text
-        res.writeHead(200, { 'Content-Type': contentType, 'Access-Control-Allow-Origin': '*' });
-        res.end(data);
+         if (!res.headersSent) { // Verifică din nou înainte de a scrie 200
+            const ext = path.extname(rootFilePath);
+            const contentType = {
+                '.html': 'text/html',
+                '.css': 'text/css',
+                '.js': 'application/javascript',
+                '.json': 'application/json',
+                '.ico': 'image/x-icon',
+                '.png': 'image/png',
+                '.jpg': 'image/jpeg',
+                '.gif': 'image/gif',
+                '.svg': 'image/svg+xml',
+            }[ext] || 'text/plain'; // Default to plain text
+            res.writeHead(200, { 'Content-Type': contentType, 'Access-Control-Allow-Origin': '*' });
+            res.end(data);
+         }
     }
   });
 }
@@ -218,6 +238,7 @@ http.createServer(async (req, res) => {
     if (isNaN(productId)) {
         return sendJSON(res, { message: 'ID produs invalid.' }, 400);
     }
+    // This endpoint should NOT require auth for general users to view details
     try {
         const { rows } = await pool.query('SELECT id, name, price, batterylife, type, features, link FROM products WHERE id = $1', [productId]);
         if (rows.length > 0) {
@@ -234,10 +255,10 @@ http.createServer(async (req, res) => {
   // --- API Endpoint: Add New Product (Admin only) ---
   if (req.method === 'POST' && pathname === '/api/products') {
     // Use authenticateToken middleware before handling the request
-    authenticateToken(req, res, async () => {
+    return authenticateToken(req, res, async () => { // RETURN here to stop execution after auth
       // Check if the authenticated user has the 'admin' role
       if (req.user.role !== 'admin') {
-        return sendJSON(res, { message: 'Acces interzis. Doar administratorii pot adăuga produse.' }, 403);
+        return sendJSON(res, { message: 'Acces interzis. Doar administratorii pot adăuga produse.' }, 403); // RETURN here
       }
 
       try {
@@ -246,20 +267,20 @@ http.createServer(async (req, res) => {
 
         // More robust server-side validation
         if (!name || typeof name !== 'string' || name.trim() === '') {
-            return sendJSON(res, { message: 'Numele produsului este obligatoriu.' }, 400);
+            return sendJSON(res, { message: 'Numele produsului este obligatoriu.' }, 400); // RETURN here
         }
          const parsedPrice = parseFloat(price);
          if (isNaN(parsedPrice) || parsedPrice <= 0) {
-             return sendJSON(res, { message: 'Prețul produsului trebuie să fie un număr pozitiv valid.' }, 400);
+             return sendJSON(res, { message: 'Prețul produsului trebuie să fie un număr pozitiv valid.' }, 400); // RETURN here
          }
          if (!type || typeof type !== 'string' || type.trim() === '') {
-             return sendJSON(res, { message: 'Tipul produsului este obligatoriu.' }, 400);
+             return sendJSON(res, { message: 'Tipul produsului este obligatoriu.' }, 400); // RETURN here
          }
          const featuresArray = Array.isArray(features) 
             ? features.map(f => String(f).trim()).filter(f => f.length > 0) 
             : (typeof features === 'string' ? features.split(',').map(f => f.trim()).filter(f => f.length > 0) : []);
          if (featuresArray.length === 0) {
-             return sendJSON(res, { message: 'Caracteristicile produsului sunt obligatorii (cel puțin una).' }, 400);
+             return sendJSON(res, { message: 'Caracteristicile produsului sunt obligatorii (cel puțin una).' }, 400); // RETURN here
          }
         const parsedBatteryLife = batteryLife ? parseInt(batteryLife, 10) : null;
         const parsedLink = link && typeof link === 'string' && link.trim() !== '' ? link.trim() : null;
@@ -269,11 +290,10 @@ http.createServer(async (req, res) => {
           'INSERT INTO products (name, price, batterylife, type, features, link) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, name',
           [name.trim(), parsedPrice, parsedBatteryLife, type.trim(), featuresArray, parsedLink]
         );
-        return sendJSON(res, { message: 'Produs adăugat cu succes!', product: result.rows[0] }, 201);
+        return sendJSON(res, { message: 'Produs adăugat cu succes!', product: result.rows[0] }, 201); // RETURN here
       } catch (error) {
         console.error('SERVER ERROR adding product:', error.message, error.stack);
-        // Handle specific database errors if needed, e.g., constraint violations
-        return sendJSON(res, { message: 'Eroare de server la adăugarea produsului.', error: error.message }, 500);
+        return sendJSON(res, { message: 'Eroare de server la adăugarea produsului.', error: error.message }, 500); // RETURN here
       }
     });
   }
@@ -282,36 +302,35 @@ http.createServer(async (req, res) => {
   // Matches paths like PUT /api/products/123
   const updateProductMatch = pathname.match(/^\/api\/products\/(\d+)$/);
   if (req.method === 'PUT' && updateProductMatch) {
-    authenticateToken(req, res, async () => {
+    return authenticateToken(req, res, async () => { // RETURN here
       if (req.user.role !== 'admin') {
-        return sendJSON(res, { message: 'Acces interzis. Doar administratorii pot edita produse.' }, 403);
+        return sendJSON(res, { message: 'Acces interzis. Doar administratorii pot edita produse.' }, 403); // RETURN here
       }
 
       const productId = parseInt(updateProductMatch[1], 10);
       if (isNaN(productId)) {
-        return sendJSON(res, { message: 'ID produs invalid.' }, 400);
+        return sendJSON(res, { message: 'ID produs invalid.' }, 400); // RETURN here
       }
 
       try {
         const { name, price, batteryLife, type, features, link } = await parseBody(req);
         console.log('Parsed product data for update:', { productId, name, price, batteryLife, type, features, link });
 
-        // More robust server-side validation for update
          if (!name || typeof name !== 'string' || name.trim() === '') {
-             return sendJSON(res, { message: 'Numele produsului este obligatoriu.' }, 400);
+             return sendJSON(res, { message: 'Numele produsului este obligatoriu.' }, 400); // RETURN here
          }
           const parsedPrice = parseFloat(price);
           if (isNaN(parsedPrice) || parsedPrice <= 0) {
-              return sendJSON(res, { message: 'Prețul produsului trebuie să fie un număr pozitiv valid.' }, 400);
+              return sendJSON(res, { message: 'Prețul produsului trebuie să fie un număr pozitiv valid.' }, 400); // RETURN here
           }
           if (!type || typeof type !== 'string' || type.trim() === '') {
-              return sendJSON(res, { message: 'Tipul produsului este obligatoriu.' }, 400);
+              return sendJSON(res, { message: 'Tipul produsului este obligatoriu.' }, 400); // RETURN here
           }
           const featuresArray = Array.isArray(features) 
              ? features.map(f => String(f).trim()).filter(f => f.length > 0) 
              : (typeof features === 'string' ? features.split(',').map(f => f.trim()).filter(f => f.length > 0) : []);
           if (featuresArray.length === 0) {
-              return sendJSON(res, { message: 'Caracteristicile produsului sunt obligatorii (cel puțin una).' }, 400);
+              return sendJSON(res, { message: 'Caracteristicile produsului sunt obligatorii (cel puțin una).' }, 400); // RETURN here
           }
          const parsedBatteryLife = batteryLife ? parseInt(batteryLife, 10) : null;
          const parsedLink = link && typeof link === 'string' && link.trim() !== '' ? link.trim() : null;
@@ -323,13 +342,13 @@ http.createServer(async (req, res) => {
         );
 
         if (result.rows.length > 0) {
-          return sendJSON(res, { message: 'Produs actualizat cu succes!', product: result.rows[0] });
+          return sendJSON(res, { message: 'Produs actualizat cu succes!', product: result.rows[0] }); // RETURN here
         } else {
-          return sendJSON(res, { message: 'Produsul nu a fost găsit pentru actualizare.' }, 404);
+          return sendJSON(res, { message: 'Produsul nu a fost găsit pentru actualizare.' }, 404); // RETURN here
         }
       } catch (error) {
         console.error('SERVER ERROR updating product:', error.message, error.stack);
-         return sendJSON(res, { message: 'Eroare de server la actualizarea produsului.', error: error.message }, 500);
+         return sendJSON(res, { message: 'Eroare de server la actualizarea produsului.', error: error.message }, 500); // RETURN here
       }
     });
   }
@@ -338,26 +357,26 @@ http.createServer(async (req, res) => {
   // Matches paths like DELETE /api/products/123
   const deleteProductMatch = pathname.match(/^\/api\/products\/(\d+)$/);
   if (req.method === 'DELETE' && deleteProductMatch) {
-    authenticateToken(req, res, async () => {
+    return authenticateToken(req, res, async () => { // RETURN here
       if (req.user.role !== 'admin') {
-        return sendJSON(res, { message: 'Acces interzis. Doar administratorii pot șterge produse.' }, 403);
+        return sendJSON(res, { message: 'Acces interzis. Doar administratorii pot șterge produse.' }, 403); // RETURN here
       }
 
       const productId = parseInt(deleteProductMatch[1], 10);
       if (isNaN(productId)) {
-        return sendJSON(res, { message: 'ID produs invalid.' }, 400);
+        return sendJSON(res, { message: 'ID produs invalid.' }, 400); // RETURN here
       }
 
       try {
         const result = await pool.query('DELETE FROM products WHERE id = $1 RETURNING id', [productId]);
         if (result.rows.length > 0) {
-          return sendJSON(res, { message: 'Produs șters cu succes!', id: result.rows[0].id });
+          return sendJSON(res, { message: 'Produs șters cu succes!', id: result.rows[0].id }); // RETURN here
         } else {
-          return sendJSON(res, { message: 'Produsul nu a fost găsit pentru ștergere.' }, 404);
+          return sendJSON(res, { message: 'Produsul nu a fost găsit pentru ștergere.' }, 404); // RETURN here
         }
       } catch (error) {
         console.error('SERVER ERROR deleting product:', error.message, error.stack);
-        return sendJSON(res, { message: 'Eroare de server la ștergerea produsului.', error: error.message }, 500);
+        return sendJSON(res, { message: 'Eroare de server la ștergerea produsului.', error: error.message }, 500); // RETURN here
       }
     });
   }
@@ -370,10 +389,10 @@ http.createServer(async (req, res) => {
         const { rows } = await pool.query('SELECT id, name, price, batterylife, type, features, link, created_at FROM products ORDER BY created_at DESC LIMIT 5');
 
         const feed = new RSS({
-          title: 'Ultimele Recomandări de Dispozitive Electronice', // Changed title
-          description: 'Cele mai recent adăugate dispozitive electronice', // Changed description
+          title: 'Ultimele Recomandări de Dispozitive Electronice', 
+          description: 'Cele mai recent adăugate dispozitive electronice', 
           feed_url: `http://localhost:${PORT}/rss`,
-          site_url: `http://localhost:${PORT}`, // Use PORT variable
+          site_url: `http://localhost:${PORT}`, 
           language: 'ro'
         });
 
@@ -381,29 +400,29 @@ http.createServer(async (req, res) => {
           feed.item({
             title: d.name,
             description: `Preț: ${d.price} Lei, Autonomie: ${d.batterylife ? d.batterylife + ' ore' : 'N/A'}, Tip: ${d.type}, Caracteristici: ${d.features.join(', ')}`,
-            url: d.link && d.link !== 'null' && d.link.trim() !== '' ? d.link : `http://localhost:${PORT}/?product_id=${d.id}`, // Link to product details page if no external link
-            date: d.created_at || new Date(), // Use created_at or current date
-            guid: d.id // Use product ID as GUID
+            url: d.link && d.link !== 'null' && d.link.trim() !== '' ? d.link : `http://localhost:${PORT}/?product_id=${d.id}`, 
+            date: d.created_at || new Date(), 
+            guid: d.id 
           });
         });
 
-        res.writeHead(200, { 'Content-Type': 'application/rss+xml', 'Access-Control-Allow-Origin': '*' });
-        return res.end(feed.xml({ indent: true }));
+        return res.end(feed.xml({ indent: true })); // RETURN here
+        // res.writeHead(200, { 'Content-Type': 'application/rss+xml', 'Access-Control-Allow-Origin': '*' }); // Moved inside try/catch to ensure it's not sent on error
+        // return res.end(feed.xml({ indent: true })); // RETURN here
+
     } catch (error) {
         console.error('Error generating RSS feed from DB:', error);
-        return sendJSON(res, { message: 'Eroare la generarea feed-ului RSS.' }, 500);
+        return sendJSON(res, { message: 'Eroare la generarea feed-ului RSS.' }, 500); // RETURN here
     }
   }
 
   // --- API Endpoint: User Registration ---
   if (req.method === 'POST' && pathname === '/api/register') {
     try {
-      // Allow user to specify role 'admin' ONLY if no admin exists yet.
-      // Otherwise, new users are always 'user'.
-      const { username, password, role } = await parseBody(req); // Get role from body
+      const { username, password, role } = await parseBody(req); 
 
       if (!username || !password) {
-        return sendJSON(res, { message: 'Numele de utilizator și parola sunt obligatorii.' }, 400);
+        return sendJSON(res, { message: 'Numele de utilizator și parola sunt obligatorii.' }, 400); // RETURN here
       }
 
       const minLength = 6;
@@ -411,36 +430,33 @@ http.createServer(async (req, res) => {
       const hasDigit = /\d/.test(password);
 
       if (password.length < minLength) {
-        return sendJSON(res, { message: `Parola trebuie să aibă minim ${minLength} caractere.` }, 400);
+        return sendJSON(res, { message: `Parola trebuie să aibă minim ${minLength} caractere.` }, 400); // RETURN here
       }
       if (!hasUppercase) {
-        return sendJSON(res, { message: 'Parola trebuie să conțină cel puțin o literă mare.' }, 400);
+        return sendJSON(res, { message: 'Parola trebuie să conțină cel puțin o literă mare.' }, 400); // RETURN here
       }
       if (!hasDigit) {
-        return sendJSON(res, { message: 'Parola trebuie să conțină cel puțin o cifră.' }, 400);
+        return sendJSON(res, { message: 'Parola trebuie să conțină cel puțin o cifră.' }, 400); // RETURN here
       }
 
       const userCheck = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
       if (userCheck.rows.length > 0) {
-        return sendJSON(res, { message: 'Numele de utilizator există deja.' }, 409);
+        return sendJSON(res, { message: 'Numele de utilizator există deja.' }, 409); // RETURN here
       }
 
-      // Security check: Prevent casual users from registering as admin
       let finalRole = 'user';
       if (role === 'admin') {
           const adminCheck = await pool.query("SELECT COUNT(*) FROM users WHERE role = 'admin'");
           const adminCount = parseInt(adminCheck.rows[0].count, 10);
           if (adminCount === 0) {
-              // Allow the first user to register as admin if requested
               finalRole = 'admin';
               console.log(`Permitting first user "${username}" to register as admin.`);
           } else {
               console.warn(`Attempted admin registration for "${username}" but admin already exists.`);
-              // Ignore the requested 'admin' role, register as 'user'
               finalRole = 'user'; 
           }
       } else {
-          finalRole = 'user'; // Ensure any other role input defaults to user
+          finalRole = 'user'; 
       }
 
 
@@ -449,20 +465,19 @@ http.createServer(async (req, res) => {
 
       const result = await pool.query(
         'INSERT INTO users (username, password_hash, role) VALUES ($1, $2, $3) RETURNING id, username, role',
-        [username, passwordHash, finalRole] // Use finalRole here
+        [username, passwordHash, finalRole] 
       );
 
       const newUser = result.rows[0];
-      // If the registered user was the first admin, return a specific message
       const message = finalRole === 'admin' 
         ? 'Utilizator admin înregistrat cu succes! (Sunteți primul admin)' 
         : 'Utilizator înregistrat cu succes!';
         
-      return sendJSON(res, { message: message, user: { id: newUser.id, username: newUser.username, role: newUser.role } }, 201);
+      return sendJSON(res, { message: message, user: { id: newUser.id, username: newUser.username, role: newUser.role } }, 201); // RETURN here
 
     } catch (error) {
       console.error('Eroare la înregistrarea utilizatorului:', error.message, error.stack);
-      return sendJSON(res, { message: 'Eroare de server la înregistrare.', error: error.message }, 500);
+      return sendJSON(res, { message: 'Eroare de server la înregistrare.', error: error.message }, 500); // RETURN here
     }
   }
 
@@ -472,51 +487,50 @@ http.createServer(async (req, res) => {
       const { username, password } = await parseBody(req);
 
       if (!username || !password) {
-        return sendJSON(res, { message: 'Numele de utilizator și parola sunt obligatorii.' }, 400);
+        return sendJSON(res, { message: 'Numele de utilizator și parola sunt obligatorii.' }, 400); // RETURN here
       }
 
       const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
       const user = result.rows[0];
 
       if (!user) {
-        return sendJSON(res, { message: 'Credențiale invalide.' }, 400);
+        return sendJSON(res, { message: 'Credențiale invalide.' }, 400); // RETURN here
       }
 
       const isMatch = await bcrypt.compare(password, user.password_hash);
 
       if (!isMatch) {
-        return sendJSON(res, { message: 'Credențiale invalide.' }, 400);
+        return sendJSON(res, { message: 'Credențiale invalide.' }, 400); // RETURN here
       }
 
       const token = jwt.sign(
         { userId: user.id, role: user.role },
         JWT_SECRET,
-        { expiresIn: '1m' } // Token expires in 1 minute for demo purposes
+        { expiresIn: '1m' } 
       );
 
-      return sendJSON(res, { message: 'Conectat cu succes!', token, role: user.role, username: user.username });
+      return sendJSON(res, { message: 'Conectat cu succes!', token, role: user.role, username: user.username }); // RETURN here
 
     } catch (error) {
       console.error('Eroare la conectarea utilizatorului:', error.message, error.stack);
-      return sendJSON(res, { message: 'Eroare de server la conectare.', error: error.message }, 500);
+      return sendJSON(res, { message: 'Eroare de server la conectare.', error: error.message }, 500); // RETURN here
     }
   }
 
   // --- Protected API Endpoint (Example) ---
   if (req.method === 'GET' && pathname === '/api/protected-info') {
-    authenticateToken(req, res, () => {
-      // This endpoint is accessible by any authenticated user
+    return authenticateToken(req, res, () => { // RETURN here
       if (req.user.role === 'admin') {
-        return sendJSON(res, { message: `Bine ai venit, ${req.user.role}! Ai accesat informații protejate (admin). ID-ul tău: ${req.user.userId}.` });
+        return sendJSON(res, { message: `Bine ai venit, ${req.user.role}! Ai accesat informații protejate (admin). ID-ul tău: ${req.user.userId}.` }); // RETURN here
       } else {
-        return sendJSON(res, { message: `Bine ai venit, ${req.user.role}! Ai accesat informații protejate. ID-ul tău: ${req.user.userId}.` });
+        return sendJSON(res, { message: `Bine ai venit, ${req.user.role}! Ai accesat informații protejate. ID-ul tău: ${req.user.userId}.` }); // RETURN here
       }
     });
-    return; // Return here to prevent falling through to 404
   }
 
 
   // If no route matches
   res.writeHead(404, { 'Access-Control-Allow-Origin': '*' });
   res.end('Not found');
+
 }).listen(PORT, () => console.log(`Server fără Express pornit pe http://localhost:${PORT}`));

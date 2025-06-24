@@ -26,7 +26,7 @@ const pool = new Pool({
   user: 'postgres', // De obicei este 'postgres'
   host: 'db.wpbeibnkbpwbnvuaqssj.supabase.co', // Folosește host-ul specificat (verifică-l în dashboard)
   database: 'postgres', // De obicei este 'postgres'
-  password: 'YOUR_SUPABASE_DATABASE_PASSWORD', // <--- !!! ÎNLOCUIEȘTE ACEASTA CU PAROLA TA REALĂ A BAZEI DE DATE SUPABASE !!!
+  password: 'postgres', // <--- !!! ÎNLOCUIEȘTE ACEASTA CU PAROLA TA REALĂ A BAZEI DE DATE SUPABASE !!!
   port: 5432, // Default PostgreSQL port
 
   // Supabase necesită conexiune SSL

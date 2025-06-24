@@ -164,7 +164,7 @@
       -webkit-appearance: none;
       -moz-appearance: none;
       appearance: none;
-      background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill='%23666' d='M9.293 12.95l.707.707 4-4-1.414-1.414L10 10.828 6.707 7.536 5.293 8.95z'/%3E%3C/svg%3E");
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill='%23666' d='M9.293 12.95l.707.707 4-4-1.414-1.414L10 10.828 6.707 7.536 5.293 8.95z'/%3E%3Csvg%3E");
       background-repeat: no-repeat;
       background-position: right 0.7em top 50%, 0 0;
       background-size: 0.8em auto, 100%;
@@ -241,6 +241,7 @@
         right: 15px;
         display: none; /* Ascuns implicit, arătat la hover pentru admin */
         gap: 10px; /* Spațiu între butoane */
+        z-index: 10; /* Asigură că butoanele sunt deasupra conținutului cardului */
     }
 
     .device-card:hover .device-actions {
@@ -249,7 +250,9 @@
 
     .device-actions button {
         padding: 9px 14px;
+        border: none; /* Adăugat: Elimină bordura implicita */
         border-radius: 8px;
+        cursor: pointer; /* Adăugat: Cursor pointer */
         font-size: 0.95em;
         font-weight: 500;
         transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
@@ -526,6 +529,15 @@
     #registerSubmit:hover {
         background-color: #3f9442;
     }
+    
+    /* Stil specific pentru butoanele de submit/update produs */
+    #submitProduct, #updateProduct {
+         background-color: var(--primary-color); /* Folosim verde pentru acțiuni de adăugare/actualizare */
+    }
+    #submitProduct:hover, #updateProduct:hover {
+        background-color: #3f9442;
+    }
+
 
     /* Mesaje de status */
     #statusMessage, #addProductStatusMessage, #editProductStatusMessage {
@@ -769,9 +781,12 @@
 <body>
   <header>
     <h1>Recomandări Dispozitive Electronice</h1>
-    <div class="header-actions"> <!-- NOU: Container pentru butoanele din header -->
+    <!-- MODIFICAT: Container pentru butoanele din header -->
+    <div class="header-actions">
+        <!-- NOU: Buton pentru adăugare produs (vizibil doar adminilor) -->
         <button id="addProductButton" style="display: none;">Adaugă Produs</button>
         <button id="loginButton">Conectare/Înregistrare</button>
+        <!-- MODIFICAT: Container pentru statusul autentificării, inclusiv butonul de Deconectare -->
         <div id="authStatus" style="display: none;">
             <span id="welcomeMessage"></span>
             <button id="logoutButton" style="display: none;">Deconectare</button>
@@ -841,7 +856,7 @@
     </div>
   </div>
 
-  <!-- Add Product Modal -->
+  <!-- NOU: Add Product Modal -->
   <div id="addProductModal" class="modal">
     <div class="modal-content">
       <span class="close-button add-product-close-button">×</span>
@@ -881,13 +896,15 @@
     </div>
   </div>
 
-    <!-- Edit Product Modal -->
+    <!-- NOU: Edit Product Modal -->
     <div id="editProductModal" class="modal">
         <div class="modal-content">
             <span class="close-button edit-product-close-button">×</span>
             <h2>Editează Produs</h2>
             <form id="editProductForm">
-                <input type="hidden" id="editProductId">
+                <!-- Câmp ascuns pentru a stoca ID-ul produsului editat -->
+                <input type="hidden" id="editProductId"> 
+                
                 <label for="editProductNameInput">Nume Produs:</label>
                 <input type="text" id="editProductNameInput" required>
 
@@ -979,16 +996,18 @@
             const editButton = document.createElement('button');
             editButton.textContent = 'Editează';
             editButton.className = 'edit-btn';
+            // Previne propagarea evenimentului de click către cardul părinte
             editButton.addEventListener('click', (e) => {
-                e.stopPropagation(); // Prevent card click from triggering
+                e.stopPropagation(); 
                 openEditProductModal(device.id);
             });
 
             const deleteButton = document.createElement('button');
             deleteButton.textContent = 'Șterge';
             deleteButton.className = 'delete-btn';
+            // Previne propagarea evenimentului de click către cardul părinte
             deleteButton.addEventListener('click', (e) => {
-                e.stopPropagation(); // Prevent card click from triggering
+                e.stopPropagation(); 
                 if (confirm('Ești sigur că vrei să ștergi acest produs?')) {
                     deleteProduct(device.id);
                 }
@@ -999,10 +1018,13 @@
             div.appendChild(actionsDiv);
         }
 
-        // Original click event for product details
-        div.addEventListener('click', () => {
-            window.history.pushState(null, '', `?product_id=${device.id}`);
-            displayProductDetails(device.id);
+        // Original click event for product details (Only triggered if click doesn't originate from buttons)
+        div.addEventListener('click', (e) => {
+            // Only navigate if the click wasn't on a button inside device-actions
+            if (!e.target.closest('.device-actions button')) {
+                 window.history.pushState(null, '', `?product_id=${device.id}`);
+                 displayProductDetails(device.id);
+            }
         });
         container.appendChild(div);
       });
@@ -1025,10 +1047,10 @@
                 document.getElementById('productFeatures').textContent = product.features.join(', ');
                 
                 const productLinkElement = document.getElementById('productLink');
-                if (product.link && product.link !== 'null') {
+                if (product.link && product.link !== 'null' && product.link.trim() !== '') { // Added trim() and check for empty string
                     productLinkElement.href = product.link;
                     productLinkElement.style.display = 'inline';
-                    productLinkElement.textContent = 'Vizitează pagina produsului'; // Changed to static text
+                    productLinkElement.textContent = 'Vizitează pagina produsului';
                 } else {
                     productLinkElement.style.display = 'none';
                 }
@@ -1123,7 +1145,7 @@
 
     // --- Logica Modalului de Login/Înregistrare ---
     const loginButton = document.getElementById('loginButton');
-    const logoutButton = document.getElementById('logoutButton');
+    const logoutButton = document.getElementById('logoutButton'); 
     const loginModal = document.getElementById('loginModal');
     const closeLoginButton = document.querySelector('.login-close-button');
     const loginSubmitButton = document.getElementById('loginSubmit');
@@ -1134,7 +1156,7 @@
     const authStatusDiv = document.getElementById('authStatus');
     const welcomeMessageSpan = document.getElementById('welcomeMessage');
 
-    let tokenExpiryCheckInterval;
+    let tokenExpiryCheckInterval; 
 
     // Afișează modalul de login
     loginButton.addEventListener('click', () => {
@@ -1192,8 +1214,10 @@
                 }
             }
         }
-        if (!token) {
-            updateAuthUI();
+        // If token is not present or already handled, clear interval
+        if (!token && tokenExpiryCheckInterval) {
+             clearInterval(tokenExpiryCheckInterval);
+             tokenExpiryCheckInterval = null;
         }
     }
 
@@ -1206,6 +1230,7 @@
 
       if (tokenExpiryCheckInterval) {
           clearInterval(tokenExpiryCheckInterval);
+          tokenExpiryCheckInterval = null;
       }
 
       if (token && role && username) {
@@ -1220,8 +1245,10 @@
             addProductButton.style.display = 'none';
         }
 
-        tokenExpiryCheckInterval = setInterval(checkTokenExpiry, 5000);
+        // Start interval only if token exists
+        tokenExpiryCheckInterval = setInterval(checkTokenExpiry, 5000); // Verifică token-ul la fiecare 5 secunde
       } else {
+        // Ensure everything is hidden if not logged in
         loginButton.style.display = 'block';
         authStatusDiv.style.display = 'none';
         welcomeMessageSpan.textContent = '';
@@ -1319,14 +1346,16 @@
       localStorage.removeItem('username');
       if (tokenExpiryCheckInterval) {
           clearInterval(tokenExpiryCheckInterval);
+          tokenExpiryCheckInterval = null; // Reset interval variable
       }
       updateAuthUI();
-      // showAuthStatusMessage('Ați fost deconectat cu succes.', 'success'); // Acest mesaj ar fi în modal, dar modalul este ascuns.
+      // Revine la pagina principală și reîncarcă datele
       window.history.pushState(null, '', '/');
       showSection(recommendationsListSection);
       fetchRecommendations();
-      fetchPopularStats(); // Reîncarcă statisticile populare
+      fetchPopularStats();
     }
+    // Event listener pentru noul buton de Deconectare
     logoutButton.addEventListener('click', logoutUser);
 
     // --- Logica Modalului de Adăugare Produs ---
@@ -1346,7 +1375,7 @@
       addProductModal.style.display = 'flex';
       addProductStatusMessageDiv.textContent = '';
       addProductStatusMessageDiv.className = '';
-      document.getElementById('productForm').reset();
+      document.getElementById('productForm').reset(); // Resetează formularul
     });
 
     // Ascunde modalul de adăugare produs
@@ -1380,7 +1409,7 @@
 
         // Validare frontend pentru forma de adăugare produs
         if (!name || isNaN(price) || price <= 0 || !type || features.length === 0) {
-            showAddProductStatusMessage('Vă rugăm să completați toate câmpurile obligatorii: Nume, Preț, Tip și cel puțin o Caracteristică.', 'error');
+            showAddProductStatusMessage('Vă rugăm să completați toate câmpurile obligatorii: Nume, Preț valid (>0), Tip și cel puțin o Caracteristică.', 'error');
             return;
         }
 
@@ -1405,7 +1434,7 @@
             if (response.ok) {
                 showAddProductStatusMessage(data.message, 'success');
                 document.getElementById('productForm').reset();
-                fetchRecommendations();
+                fetchRecommendations(); // Reîncarcă lista de produse
                 fetchPopularStats(); // Reîncarcă statisticile populare după adăugare
                 setTimeout(() => {
                     addProductModal.style.display = 'none';
@@ -1451,10 +1480,10 @@
                 editProductIdInput.value = product.id;
                 editProductNameInput.value = product.name;
                 editProductPriceInput.value = product.price;
-                editProductBatteryLifeInput.value = product.batterylife || '';
+                editProductBatteryLifeInput.value = product.batterylife || ''; // Use empty string for null/undefined
                 editProductTypeInput.value = product.type;
                 editProductFeaturesInput.value = product.features.join(', ');
-                editProductLinkInput.value = product.link && product.link !== 'null' ? product.link : '';
+                editProductLinkInput.value = product.link && product.link !== 'null' ? product.link : ''; // Use empty string for null/undefined/literal 'null'
 
                 editProductModal.style.display = 'flex';
             } else {
@@ -1491,10 +1520,11 @@
         const link = editProductLinkInput.value.trim();
 
         // Validare frontend pentru forma de editare produs
-        if (!name || isNaN(price) || price <= 0 || !type || features.length === 0) {
-            showEditProductStatusMessage('Vă rugăm să completați toate câmpurile obligatorii: Nume, Preț, Tip și cel puțin o Caracteristică.', 'error');
+         if (!productId || !name || isNaN(price) || price <= 0 || !type || features.length === 0) {
+            showEditProductStatusMessage('Vă rugăm să completați toate câmpurile obligatorii: Nume, Preț valid (>0), Tip și cel puțin o Caracteristică.', 'error');
             return;
         }
+
 
         const token = localStorage.getItem('token');
         if (!token) {
@@ -1518,6 +1548,12 @@
                 showEditProductStatusMessage(data.message, 'success');
                 fetchRecommendations(); // Reîncarcă lista de produse
                 fetchPopularStats(); // Reîncarcă statisticile populare după editare
+                // Afișează detaliile produsului actualizat dacă utilizatorul era pe acea pagină
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('product_id') === productId.toString()) {
+                    displayProductDetails(productId);
+                }
+
                 setTimeout(() => {
                     editProductModal.style.display = 'none';
                 }, 1500);
@@ -1552,6 +1588,14 @@
                 alert(data.message); // Consideră un modal personalizat în loc de alert
                 fetchRecommendations(); // Reîncarcă lista de produse
                 fetchPopularStats(); // Reîncarcă statisticile populare după ștergere
+
+                 // If the deleted product details page was active, go back to the list
+                 const urlParams = new URLSearchParams(window.location.search);
+                 if (urlParams.get('product_id') === productId.toString()) {
+                    window.history.pushState(null, '', '/');
+                    showSection(recommendationsListSection);
+                 }
+
             } else {
                 alert(data.message || 'Eroare la ștergerea produsului.'); // Consideră un modal personalizat în loc de alert
             }

@@ -29,19 +29,20 @@ const pool = new Pool({
   // Glitch va încărca automat aceste valori în process.env
 
   user: process.env.DB_USER || 'postgres',
-  host: process.env.DB_HOST,            // Citit din .env
+  host: process.env.DB_HOST,            // Citit din .env (Hostname-ul care se poate rezolva și la IPv6)
   database: process.env.DB_NAME || 'postgres',
   password: process.env.DB_PASSWORD,        // Citit din .env (NU PUNE PAROLA REALĂ AICI DIRECT ÎN COD!)
   port: process.env.DB_PORT || 5432,
 
   // Supabase necesită conexiune SSL
   ssl: {
-      rejectUnauthorized: false // Set this to true in production if you have a valid certificate, false for development/some hosting
-  },
+      // Pe Glitch, s-ar putea să fie necesar rejectUnauthorized: false, dar încearcă întâi true sau elimină-l
+      // Render cerea false, Glitch ar putea fi diferit. Începe cu false dacă ai probleme.
+      rejectUnauthorized: false // Poți încerca true dacă false dă erori legate de certificat
+  }
 
-  // Forțează conexiunea să folosească doar IPv4 pentru a rezolva ENETUNREACH pe IPv6
-  // Aceasta este cea mai probabilă soluție pentru eroarea pe care o primești.
-  family: 4
+  // LINIA family: 4 A FOST ELIMINATĂ CONFORM CERINȚEI.
+  // Librăria pg va încerca acum să folosească IPv6 dacă DNS-ul îl returnează și dacă sistemul de operare permite.
 });
 
 // Test database connection
@@ -54,7 +55,7 @@ pool.connect((err, client, done) => {
         database: pool.options.database,
         port: pool.options.port,
         ssl_rejectUnauthorized: pool.options.ssl.rejectUnauthorized,
-        family: pool.options.family,
+        // family: pool.options.family, // Nu va apărea dacă linia e comentată
     });
     console.error('Environment Variables check (password status):', {
         DB_USER_IS_SET: !!process.env.DB_USER,
@@ -121,6 +122,7 @@ function serveStatic(res, filePathRelative) {
    } else {
         fullPath = path.join(baseDir, filePathRelative);
    }
+
 
   fs.readFile(fullPath, (err, data) => {
     if (err) {
@@ -195,7 +197,7 @@ async function scrapeProductPage(productUrl) {
 
 
         let priceText = $('.product-price-now, .product-price span, .price').first().text().trim();
-        if (!priceText) {
+        if (!priceText) { // Fallback if common price selectors fail
             const dataPriceAttrElement = $('[data-price]').first();
             if (dataPriceAttrElement.length > 0) {
                  const dataPriceAttr = dataPriceAttrElement.attr('data-price');
@@ -266,7 +268,7 @@ async function scrapeProductPage(productUrl) {
         if (!imageUrl) imageUrl = $('img.product-main-image').attr('src');
         if (!imageUrl) imageUrl = $('img[itemprop="image"]').attr('src');
         if (!imageUrl) imageUrl = $('a.thumbnail img').attr('src');
-        if (!imageUrl) imageUrl = $('img[alt*="' + (name || '').substring(0, 15) + '"]').attr('src'); // Use partial name if full name doesn't match alt
+        if (!imageUrl) imageUrl = $('img[alt*="' + (name || '').substring(0, 15) + '"]').attr('src');
 
         if (imageUrl && !imageUrl.startsWith('http')) {
             try {
@@ -276,9 +278,9 @@ async function scrapeProductPage(productUrl) {
                 imageUrl = null;
             }
         } else if (imageUrl && imageUrl.startsWith('//')) {
-             imageUrl = 'http:' + imageUrl; // Prefer https if possible
+             imageUrl = 'http:' + imageUrl;
         }
-        if (imageUrl && (imageUrl.length < 15 || imageUrl.includes('data:image'))) { // Increased minimum length slightly
+        if (imageUrl && (imageUrl.length < 15 || imageUrl.includes('data:image'))) {
             imageUrl = null;
         }
 
@@ -402,7 +404,7 @@ http.createServer(async (req, res) => {
         }
          const parsedPrice = parseFloat(price);
          if (isNaN(parsedPrice) || parsedPrice <= 0) {
-             return sendJSON(res, { message: 'Prețul produsului trebuie să fie un număr pozitiv valid.' }, 400);
+              return sendJSON(res, { message: 'Prețul produsului trebuie să fie un număr pozitiv valid.' }, 400);
          }
          if (!type || typeof type !== 'string' || type.trim() === '') {
              return sendJSON(res, { message: 'Tipul produsului este obligatoriu.' }, 400);
@@ -542,7 +544,6 @@ http.createServer(async (req, res) => {
         const feed = new RSS({
           title: 'Ultimele Recomandări de Dispozitive Electronice',
           description: 'Cele mai recent adăugate dispozitive electronice',
-          // Pe platforme de hosting, folosește hostname-ul real al aplicației
           feed_url: process.env.APP_BASE_URL ? `${process.env.APP_BASE_URL}/rss` : `http://localhost:${PORT}/rss`,
           site_url: process.env.APP_BASE_URL || `http://localhost:${PORT}`,
           language: 'ro'

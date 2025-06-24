@@ -16,7 +16,7 @@ const pool = new Pool({
   user: 'postgres', // IMPORTANT: Change this to your PostgreSQL username
   host: 'localhost',
   database: 'DeW',
-  password: 'postgres', // IMPORTANT: Change this to your PostgreSQL password
+  password: 'admin', // IMPORTANT: Change this to your PostgreSQL password
   port: 5432,
 });
 
@@ -35,7 +35,6 @@ function sendJSON(res, data, status = 200) {
   // Adăugăm o verificare pentru a preveni trimiterea headers-urilor dacă au fost deja trimise
   if (res.headersSent) {
     console.warn('Attempted to send headers twice!');
-    // Poți adăuga o logică alternativă aici, cum ar fi să loghezi eroarea
     return; // Oprește execuția funcției dacă headers-urile au fost trimise
   }
   res.writeHead(status, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type, Authorization' });
@@ -76,6 +75,8 @@ function serveStatic(res, pathname) {
       filePath = path.join(__dirname, 'index.html'); // Serve index.html for the root
   } else if (pathname === '/product-details.html') {
       filePath = path.join(__dirname, 'product-details.html'); // Serve product-details.html
+  } else if (pathname === '/favorites.html') { // NOU: Ruta pentru pagina de favorite
+      filePath = path.join(__dirname, 'favorites.html');
   } else {
        // For other paths, try serving from 'public' directory
        filePath = path.join(__dirname, 'public', pathname);
@@ -86,15 +87,11 @@ function serveStatic(res, pathname) {
         }
   }
 
-    // If the requested path *itself* wasn't index or product-details, and it doesn't exist,
-    // try falling back to index.html for potential SPA routes (less relevant now, but good practice)
-    const finalPath = filePath; // Use the determined path
+    const finalPath = filePath;
 
   fs.readFile(finalPath, (err, data) => {
     if (err) {
         console.error(`Error reading file ${finalPath}:`, err.message);
-        // If the specific file (like product-details.html) wasn't found,
-        // or if it was another static asset that doesn't exist, return 404.
          if (!res.headersSent) {
             res.writeHead(404, { 'Access-Control-Allow-Origin': '*' });
             res.end('Not found');
@@ -112,7 +109,7 @@ function serveStatic(res, pathname) {
                 '.jpg': 'image/jpeg',
                 '.gif': 'image/gif',
                 '.svg': 'image/svg+xml',
-            }[ext] || 'text/plain'; // Default to plain text
+            }[ext] || 'text/plain';
             res.writeHead(200, { 'Content-Type': contentType, 'Access-Control-Allow-Origin': '*' });
             res.end(data);
          }
@@ -133,11 +130,10 @@ function authenticateToken(req, res, callback) {
   jwt.verify(token, JWT_SECRET, (err, user) => {
     if (err) {
       console.error('Verificarea tokenului a eșuat:', err.message);
-      return sendJSON(res, { message: 'Token invalid sau expirat.' }, 403); // Changed 403 message
+      return sendJSON(res, { message: 'Token invalid sau expirat.' }, 403);
     }
-    // Attach user information (from token payload) to the request object
     req.user = user;
-    callback(); // Call the next function (the actual route handler)
+    callback();
   });
 }
 
@@ -156,14 +152,11 @@ http.createServer(async (req, res) => {
   }
 
   // --- Static File Serving ---
-  // Serve index.html, product-details.html, or other static files
-  // This should come first for GET requests that are not API calls
   if (req.method === 'GET' && !pathname.startsWith('/api') && pathname !== '/rss') {
-      // Check explicitly for root and product-details page
-      if (pathname === '/' || pathname === '/index.html' || pathname === '/product-details.html') {
+      // NOU: Includem si favorites.html aici
+      if (pathname === '/' || pathname === '/index.html' || pathname === '/product-details.html' || pathname === '/favorites.html') {
           return serveStatic(res, pathname);
       }
-      // For other GET requests, try to serve as static assets from root or public
       return serveStatic(res, pathname);
   }
 
@@ -221,7 +214,6 @@ http.createServer(async (req, res) => {
     if (isNaN(productId)) {
         return sendJSON(res, { message: 'ID produs invalid.' }, 400);
     }
-    // This endpoint should NOT require auth for general users to view details
     try {
         const { rows } = await pool.query('SELECT id, name, price, batterylife, type, features, link FROM products WHERE id = $1', [productId]);
         if (rows.length > 0) {
@@ -279,7 +271,6 @@ http.createServer(async (req, res) => {
   }
 
   // --- API Endpoint: Update Product (Admin only) ---
-  // Matches paths like PUT /api/products/123
   const updateProductMatch = pathname.match(/^\/api\/products\/(\d+)$/);
   if (req.method === 'PUT' && updateProductMatch) {
     return authenticateToken(req, res, async () => { 
@@ -334,7 +325,6 @@ http.createServer(async (req, res) => {
   }
 
   // --- API Endpoint: Delete Product (Admin only) ---
-  // Matches paths like DELETE /api/products/123
   const deleteProductMatch = pathname.match(/^\/api\/products\/(\d+)$/);
   if (req.method === 'DELETE' && deleteProductMatch) {
     return authenticateToken(req, res, async () => { 
@@ -365,8 +355,19 @@ http.createServer(async (req, res) => {
   // --- API Endpoint: RSS Feed (now fetches from DB) ---
   if (req.method === 'GET' && pathname === '/rss') {
     try {
-        // Fetch the latest 5 products, including created_at
-        const { rows } = await pool.query('SELECT id, name, price, batterylife, type, features, link, created_at FROM products ORDER BY created_at DESC LIMIT 5');
+        const { limit } = parsedUrl.query;
+        // Setează o limită implicită de 100 dacă 'limit' nu este furnizat sau este invalid/negativ
+        const queryLimit = (limit && parseInt(limit, 10) > 0) ? parseInt(limit, 10) : 100;
+
+        let queryText = 'SELECT id, name, price, batterylife, type, features, link, created_at FROM products ORDER BY created_at DESC';
+        const queryParams = [];
+
+        if (queryLimit > 0) {
+            queryText += ` LIMIT $1`;
+            queryParams.push(queryLimit);
+        }
+
+        const { rows } = await pool.query(queryText, queryParams);
 
         const feed = new RSS({
           title: 'Ultimele Recomandări de Dispozitive Electronice', 
@@ -502,6 +503,110 @@ http.createServer(async (req, res) => {
         return sendJSON(res, { message: `Bine ai venit, ${req.user.role}! Ai accesat informații protejate (admin). ID-ul tău: ${req.user.userId}.` });
       } else {
         return sendJSON(res, { message: `Bine ai venit, ${req.user.role}! Ai accesat informații protejate. ID-ul tău: ${req.user.userId}.` });
+      }
+    });
+  }
+
+  // NOU: API Endpoint pentru a adăuga un produs la favorite
+  if (req.method === 'POST' && pathname === '/api/favorites') {
+    return authenticateToken(req, res, async () => {
+      const { productId } = await parseBody(req);
+      const userId = req.user.userId;
+
+      if (!productId) {
+        return sendJSON(res, { message: 'ID-ul produsului este obligatoriu.' }, 400);
+      }
+
+      try {
+        const result = await pool.query(
+          'INSERT INTO user_favorites (user_id, product_id) VALUES ($1, $2) ON CONFLICT (user_id, product_id) DO NOTHING RETURNING *',
+          [userId, productId]
+        );
+
+        if (result.rowCount > 0) {
+          return sendJSON(res, { message: 'Produs adăugat la favorite!', productId });
+        } else {
+          return sendJSON(res, { message: 'Produsul este deja în favorite sau nu a putut fi adăugat.' }, 409);
+        }
+      } catch (error) {
+        console.error('Eroare la adăugarea la favorite:', error);
+        return sendJSON(res, { message: 'Eroare de server la adăugarea la favorite.', error: error.message }, 500);
+      }
+    });
+  }
+
+  // NOU: API Endpoint pentru a elimina un produs din favorite
+  if (req.method === 'DELETE' && pathname.startsWith('/api/favorites/')) {
+    const productIdMatch = pathname.match(/\/api\/favorites\/(\d+)$/);
+    if (!productIdMatch) {
+      return sendJSON(res, { message: 'ID produs favorit invalid.' }, 400);
+    }
+    const productId = parseInt(productIdMatch[1], 10);
+
+    return authenticateToken(req, res, async () => {
+      const userId = req.user.userId;
+
+      try {
+        const result = await pool.query(
+          'DELETE FROM user_favorites WHERE user_id = $1 AND product_id = $2 RETURNING *',
+          [userId, productId]
+        );
+
+        if (result.rowCount > 0) {
+          return sendJSON(res, { message: 'Produs eliminat din favorite!', productId });
+        } else {
+          return sendJSON(res, { message: 'Produsul nu a fost găsit în favorite sau nu a putut fi eliminat.' }, 404);
+        }
+      } catch (error) {
+        console.error('Eroare la eliminarea din favorite:', error);
+        return sendJSON(res, { message: 'Eroare de server la eliminarea din favorite.', error: error.message }, 500);
+      }
+    });
+  }
+
+  // NOU: API Endpoint pentru a prelua lista de favorite a utilizatorului
+  if (req.method === 'GET' && pathname === '/api/favorites') {
+    return authenticateToken(req, res, async () => {
+      const userId = req.user.userId;
+
+      try {
+        const { rows } = await pool.query(
+          `SELECT p.id, p.name, p.price, p.batterylife, p.type, p.features, p.link
+           FROM products p
+           JOIN user_favorites uf ON p.id = uf.product_id
+           WHERE uf.user_id = $1
+           ORDER BY uf.favorited_at DESC`,
+          [userId]
+        );
+        return sendJSON(res, rows);
+      } catch (error) {
+        console.error('Eroare la preluarea listei de favorite:', error);
+        return sendJSON(res, { message: 'Eroare de server la preluarea favoritelor.', error: error.message }, 500);
+      }
+    });
+  }
+
+  // NOU: API Endpoint pentru a verifica dacă un produs este în favoritele utilizatorului
+  if (req.method === 'GET' && pathname.startsWith('/api/favorites/check/')) {
+    const productIdMatch = pathname.match(/\/api\/favorites\/check\/(\d+)$/);
+    if (!productIdMatch) {
+      return sendJSON(res, { message: 'ID produs invalid pentru verificare favorite.' }, 400);
+    }
+    const productId = parseInt(productIdMatch[1], 10);
+
+    return authenticateToken(req, res, async () => {
+      const userId = req.user.userId;
+
+      try {
+        const { rows } = await pool.query(
+          'SELECT 1 FROM user_favorites WHERE user_id = $1 AND product_id = $2',
+          [userId, productId]
+        );
+        // Trimite { isFavorited: true } dacă există o înregistrare, altfel { isFavorited: false }
+        return sendJSON(res, { isFavorited: rows.length > 0 });
+      } catch (error) {
+        console.error('Eroare la verificarea favoritelor:', error);
+        return sendJSON(res, { message: 'Eroare de server la verificarea favoritelor.', error: error.message }, 500);
       }
     });
   }

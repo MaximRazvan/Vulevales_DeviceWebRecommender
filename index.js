@@ -15,10 +15,10 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_super_secret_jwt_key_12345';
 
 // --- PostgreSQL Database Configuration ---
 const pool = new Pool({
-  user: 'postgres',
-  host: 'localhost',
+  user: 'postgre',
+  host: 'dpg-d1deiv2li9vc73fbpb80-a',
   database: 'DeW',
-  password: 'postgres',
+  password: 'kqsypCotdS1vY6UzNyxhzJxNA3WrbMsX',
   port: 5432,
 });
 

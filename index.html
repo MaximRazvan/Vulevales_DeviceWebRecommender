@@ -214,6 +214,9 @@
       cursor: pointer;
       position: relative;
       transition: transform 0.3s ease, box-shadow 0.3s ease; /* Tranziții fluide la hover */
+      /* NOU: Folosim flexbox pentru a aranja elementele interne */
+      display: flex; 
+      flex-direction: column; 
     }
 
     .device-card:hover {
@@ -221,38 +224,26 @@
       box-shadow: 0 12px 30px var(--shadow-medium); /* Umbră mai adâncă la hover */
     }
 
-    .device-card h3 {
-        color: var(--primary-color); /* Colorează numele dispozitivului */
-        margin-top: 0;
-        margin-bottom: 0.7em;
-        font-size: 1.7em;
-        font-weight: 600;
-    }
-
-    .device-card p {
-        margin-bottom: 0.4em;
-        font-size: 1.05em;
-        color: #666;
-    }
-
+    /* NOU: Stiluri pentru caseta de acțiuni deasupra */
     .device-actions {
-        position: absolute;
-        top: 15px;
-        right: 15px;
-        display: none; /* Ascuns implicit, arătat la hover pentru admin */
-        gap: 10px; /* Spațiu între butoane */
-        z-index: 10; /* Asigură că butoanele sunt deasupra conținutului cardului */
+        display: flex; 
+        justify-content: flex-end; /* Aliniază butoanele la dreapta */
+        gap: 10px; 
+        margin-bottom: 1em; 
+        padding-bottom: 1em; 
+        border-bottom: 1px solid var(--border-color); 
+        z-index: 10; 
+        /* Eliminat: position, top, right, display: none initial */
     }
-
-    .device-card:hover .device-actions {
-        display: flex; /* Afișează la hover (pentru admin) */
-    }
+    
+    /* Eliminat regula de hover specifică */
+    /* .device-card:hover .device-actions { display: flex; } */
 
     .device-actions button {
         padding: 9px 14px;
-        border: none; /* Adăugat: Elimină bordura implicita */
+        border: none; 
         border-radius: 8px;
-        cursor: pointer; /* Adăugat: Cursor pointer */
+        cursor: pointer; 
         font-size: 0.95em;
         font-weight: 500;
         transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
@@ -281,6 +272,21 @@
     .device-actions button.delete-btn:hover {
         background-color: #c82333;
     }
+
+    .device-card h3 {
+        color: var(--primary-color); 
+        margin-top: 0; /* Elimină margin-top, acum spațierea vine de la actionsDiv */
+        margin-bottom: 0.7em;
+        font-size: 1.7em;
+        font-weight: 600;
+    }
+
+    .device-card p {
+        margin-bottom: 0.4em;
+        font-size: 1.05em;
+        color: #666;
+    }
+
 
     .no-results {
       text-align: center;
@@ -313,6 +319,16 @@
         transform: translateY(-3px);
         box-shadow: 0 5px 15px var(--shadow-medium);
     }
+    
+    /* Stil pentru mesajul informativ sub statistici */
+    #popularStatsInfo {
+        text-align: center;
+        font-style: italic;
+        color: #888;
+        margin-top: 1em;
+        font-size: 1em; /* Dimensiune text normală */
+    }
+
 
     /* Secțiunea Detalii Produs */
     #productDetails {
@@ -642,10 +658,12 @@
       /* Butoanele de acțiune întotdeauna vizibile pe mobil */
       .device-actions {
           position: static; /* Nu mai este poziționată absolut */
-          display: flex !important; /* Întotdeauna vizibilă, folosim !important pentru a suprascrie regulile de hover */
+          display: flex !important; /* Întotdeauna vizibilă, folosim !important pentru a suprascrie regulile */
           justify-content: flex-end; /* Butoanele la dreapta */
-          margin-top: 1em;
+          margin-top: 0.5em; /* Ajustează spațierea */
           gap: 8px;
+          padding-bottom: 0.5em; /* Ajustează padding pe mobil */
+          border-bottom: 1px solid var(--border-color); /* Păstrează linia */
       }
       .device-actions button {
           padding: 8px 12px;
@@ -679,6 +697,11 @@
         font-size: 2em;
       }
 
+      .modal-content input, .modal-content select {
+          padding: 10px;
+          font-size: 0.95em;
+          border-radius: 10px;
+      }
       .modal-buttons {
         flex-direction: column;
         gap: 12px;
@@ -781,12 +804,9 @@
 <body>
   <header>
     <h1>Recomandări Dispozitive Electronice</h1>
-    <!-- MODIFICAT: Container pentru butoanele din header -->
     <div class="header-actions">
-        <!-- NOU: Buton pentru adăugare produs (vizibil doar adminilor) -->
         <button id="addProductButton" style="display: none;">Adaugă Produs</button>
         <button id="loginButton">Conectare/Înregistrare</button>
-        <!-- MODIFICAT: Container pentru statusul autentificării, inclusiv butonul de Deconectare -->
         <div id="authStatus" style="display: none;">
             <span id="welcomeMessage"></span>
             <button id="logoutButton" style="display: none;">Deconectare</button>
@@ -794,9 +814,9 @@
     </div>
     <input type="text" id="searchInput" placeholder="Caută după model sau caracteristici...">
     <div id="filters">
-      <input type="number" id="minPrice" placeholder="Preț minim">
-      <input type="number" id="maxPrice" placeholder="Preț maxim">
-      <input type="number" id="batteryLife" placeholder="Autonomie (ore)">
+      <input type="number" id="minPrice" placeholder="Preț minim" min="0">
+      <input type="number" id="maxPrice" placeholder="Preț maxim" min="0">
+      <input type="number" id="batteryLife" placeholder="Autonomie (ore)" min="0">
       <select id="deviceType">
         <option value="">Toate tipurile</option>
         <option value="telefon">Telefon</option>
@@ -817,6 +837,10 @@
     <section id="popularStats">
       <h2>Statistici populare</h2>
       <ul id="popularList"></ul>
+       <!-- Mesaj informativ explicit -->
+      <p id="popularStatsInfo" style="text-align: center; font-style: italic; color: #888; margin-top: 1em;">
+        Această secțiune necesită un endpoint de backend dedicat pentru statistici populare, care nu este încă implementat în server.js.
+      </p>
     </section>
 
     <!-- Product Detail Section -->
@@ -856,7 +880,7 @@
     </div>
   </div>
 
-  <!-- NOU: Add Product Modal -->
+  <!-- Add Product Modal -->
   <div id="addProductModal" class="modal">
     <div class="modal-content">
       <span class="close-button add-product-close-button">×</span>
@@ -866,10 +890,10 @@
         <input type="text" id="productNameInput" required>
 
         <label for="productPriceInput">Preț:</label>
-        <input type="number" id="productPriceInput" step="0.01" required>
+        <input type="number" id="productPriceInput" step="0.01" required min="0">
 
         <label for="productBatteryLifeInput">Autonomie Baterie (ore):</label>
-        <input type="number" id="productBatteryLifeInput">
+        <input type="number" id="productBatteryLifeInput" min="0">
 
         <label for="productTypeInput">Tip Produs:</label>
         <select id="productTypeInput" required>
@@ -896,23 +920,22 @@
     </div>
   </div>
 
-    <!-- NOU: Edit Product Modal -->
+    <!-- Edit Product Modal -->
     <div id="editProductModal" class="modal">
         <div class="modal-content">
             <span class="close-button edit-product-close-button">×</span>
             <h2>Editează Produs</h2>
             <form id="editProductForm">
-                <!-- Câmp ascuns pentru a stoca ID-ul produsului editat -->
                 <input type="hidden" id="editProductId"> 
                 
                 <label for="editProductNameInput">Nume Produs:</label>
                 <input type="text" id="editProductNameInput" required>
 
                 <label for="editProductPriceInput">Preț:</label>
-                <input type="number" id="editProductPriceInput" step="0.01" required>
+                <input type="number" id="editProductPriceInput" step="0.01" required min="0">
 
                 <label for="editProductBatteryLifeInput">Autonomie Baterie (ore):</label>
-                <input type="number" id="editProductBatteryLifeInput">
+                <input type="number" id="editProductBatteryLifeInput" min="0">
 
                 <label for="editProductTypeInput">Tip Produs:</label>
                 <select id="editProductTypeInput" required>
@@ -945,13 +968,16 @@
     const popularStatsSection = document.getElementById('popularStats');
     const productDetailsSection = document.getElementById('productDetails');
     const backToRecommendationsButton = document.getElementById('backToRecommendations');
+    const popularStatsInfo = document.getElementById('popularStatsInfo'); 
 
     // Function to show/hide sections
     function showSection(sectionElement) {
         recommendationsListSection.style.display = 'none';
         popularStatsSection.style.display = 'none';
         productDetailsSection.style.display = 'none';
-        sectionElement.style.display = 'block';
+        if (sectionElement) { 
+           sectionElement.style.display = 'block';
+        }
     }
 
     async function fetchRecommendations(query = '') {
@@ -959,7 +985,7 @@
       const maxPrice = document.getElementById('maxPrice').value;
       const batteryLife = document.getElementById('batteryLife').value;
       const deviceType = document.getElementById('deviceType').value;
-      const userRole = localStorage.getItem('userRole'); // Get user role
+      const userRole = localStorage.getItem('userRole'); 
 
       const params = new URLSearchParams({
         q: query,
@@ -969,65 +995,83 @@
         deviceType
       });
 
-      const res = await fetch(`/api/recommendations?${params.toString()}`);
-      const data = await res.json();
-      const container = document.getElementById('recommendations');
-      container.innerHTML = '';
-      
-      if (data.length === 0) {
-        container.innerHTML = '<p class="no-results">Nu s-au găsit recomandări.</p>';
-        return;
-      }
-      data.forEach(device => {
-        const div = document.createElement('div');
-        div.className = 'device-card';
-        div.dataset.productId = device.id;
-        div.innerHTML = `
-          <h3>${device.name}</h3>
-          <p>Preț: ${device.price} Lei</p>
-          <p>Caracteristici: ${device.features.join(', ')}</p>
-        `;
+      try { 
+          const res = await fetch(`/api/recommendations?${params.toString()}`);
+          if (!res.ok) {
+              console.error('Failed to fetch recommendations:', res.status, res.statusText);
+               document.getElementById('recommendations').innerHTML = '<p class="no-results error">Eroare la încărcarea recomandărilor.</p>';
+               return;
+          }
+          const data = await res.json();
+          const container = document.getElementById('recommendations');
+          container.innerHTML = '';
+          
+          if (data.length === 0) {
+            container.innerHTML = '<p class="no-results">Nu s-au găsit recomandări conform filtrelor.</p>'; 
+            return;
+          }
+          data.forEach(device => {
+            const div = document.createElement('div');
+            div.className = 'device-card';
+            div.dataset.productId = device.id;
 
-        // Add edit/delete buttons if user is admin
-        if (userRole === 'admin') {
-            const actionsDiv = document.createElement('div');
-            actionsDiv.className = 'device-actions';
+            // Add edit/delete buttons container if user is admin
+            if (userRole === 'admin') {
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'device-actions'; 
 
-            const editButton = document.createElement('button');
-            editButton.textContent = 'Editează';
-            editButton.className = 'edit-btn';
-            // Previne propagarea evenimentului de click către cardul părinte
-            editButton.addEventListener('click', (e) => {
-                e.stopPropagation(); 
-                openEditProductModal(device.id);
-            });
+                const editButton = document.createElement('button');
+                editButton.textContent = 'Editează';
+                editButton.className = 'edit-btn';
+                editButton.addEventListener('click', (e) => {
+                    e.stopPropagation(); 
+                    openEditProductModal(device.id);
+                });
 
-            const deleteButton = document.createElement('button');
-            deleteButton.textContent = 'Șterge';
-            deleteButton.className = 'delete-btn';
-            // Previne propagarea evenimentului de click către cardul părinte
-            deleteButton.addEventListener('click', (e) => {
-                e.stopPropagation(); 
-                if (confirm('Ești sigur că vrei să ștergi acest produs?')) {
-                    deleteProduct(device.id);
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'Șterge';
+                deleteButton.className = 'delete-btn';
+                deleteButton.addEventListener('click', (e) => {
+                    e.stopPropagation(); 
+                    if (confirm('Ești sigur că vrei să ștergi acest produs?')) {
+                        deleteProduct(device.id);
+                    }
+                });
+
+                actionsDiv.appendChild(editButton);
+                actionsDiv.appendChild(deleteButton);
+                // Inserăm div-ul de acțiuni la începutul cardului
+                div.insertBefore(actionsDiv, div.firstChild);
+            }
+            
+            // Adăugăm restul conținutului cardului (h3 and p elements)
+            const contentHTML = `
+              <h3>${device.name}</h3>
+              <p>Preț: ${device.price} Lei</p>
+              <p>Caracteristici: ${device.features.join(', ')}</p>
+            `;
+             // Creăm elemente HTML din string și le adăugăm la div
+             const tempDiv = document.createElement('div');
+             tempDiv.innerHTML = contentHTML;
+             while(tempDiv.firstChild) {
+                 div.appendChild(tempDiv.firstChild);
+             }
+
+
+            // Original click event for product details
+            div.addEventListener('click', (e) => {
+                // Only navigate if the click wasn't on a button inside device-actions
+                if (!e.target.closest('.device-actions button')) {
+                     window.history.pushState(null, '', `?product_id=${device.id}`);
+                     displayProductDetails(device.id);
                 }
             });
-
-            actionsDiv.appendChild(editButton);
-            actionsDiv.appendChild(deleteButton);
-            div.appendChild(actionsDiv);
-        }
-
-        // Original click event for product details (Only triggered if click doesn't originate from buttons)
-        div.addEventListener('click', (e) => {
-            // Only navigate if the click wasn't on a button inside device-actions
-            if (!e.target.closest('.device-actions button')) {
-                 window.history.pushState(null, '', `?product_id=${device.id}`);
-                 displayProductDetails(device.id);
-            }
-        });
-        container.appendChild(div);
-      });
+            container.appendChild(div);
+          });
+      } catch (error) {
+           console.error('Error fetching recommendations:', error);
+           document.getElementById('recommendations').innerHTML = '<p class="no-results error">A apărut o eroare la încărcarea recomandărilor.</p>';
+      }
     }
 
     // Function to display single product details
@@ -1040,14 +1084,13 @@
 
             if (res.ok) {
                 document.getElementById('productName').textContent = product.name;
-                // Note: product.batterylife from DB, but frontend uses productBatteryLife for display
                 document.getElementById('productPrice').textContent = product.price;
                 document.getElementById('productBatteryLife').textContent = product.batterylife ? `${product.batterylife} ore` : 'N/A';
                 document.getElementById('productType').textContent = product.type;
                 document.getElementById('productFeatures').textContent = product.features.join(', ');
                 
                 const productLinkElement = document.getElementById('productLink');
-                if (product.link && product.link !== 'null' && product.link.trim() !== '') { // Added trim() and check for empty string
+                if (product.link && product.link !== 'null' && product.link.trim() !== '') { 
                     productLinkElement.href = product.link;
                     productLinkElement.style.display = 'inline';
                     productLinkElement.textContent = 'Vizitează pagina produsului';
@@ -1055,47 +1098,48 @@
                     productLinkElement.style.display = 'none';
                 }
             } else {
-                productDetailsSection.innerHTML = `<p class="no-results">Eroare: ${product.message || 'Produsul nu a putut fi încărcat.'}</p>`;
+                productDetailsSection.innerHTML = `<p class="no-results error">Eroare: ${product.message || 'Produsul nu a putut fi încărcat.'}</p>`;
             }
         } catch (error) {
             console.error('Eroare la preluarea detaliilor produsului:', error);
-            productDetailsSection.innerHTML = '<p class="no-results">A apărut o eroare la încărcarea detaliilor produsului.</p>';
+            productDetailsSection.innerHTML = '<p class="no-results error">A apărut o eroare la încărcarea detaliilor produsului.</p>';
         }
     }
     
-    // Fetch popular statistics - Această parte lipsea din JS-ul original. Am adăugat o implementare simplă.
+    // Fetch popular statistics
     async function fetchPopularStats() {
         const popularList = document.getElementById('popularList');
-        popularList.innerHTML = '<li>Se încarcă statisticile...</li>'; // Placeholder
+        popularList.innerHTML = ''; 
+        if (popularStatsInfo) { // Ensure element exists
+           popularStatsInfo.style.display = 'block'; 
+        }
+
+
         try {
-            // Presupunem că există un endpoint API pentru articole populare, de ex. /api/popular
-            // Backend-ul furnizat nu are un endpoint /api/popular.
-            // Pentru a face această secțiune funcțională cu backend-ul dat, vom simula datele sau vom lăsa-o
-            // să afișeze un mesaj de eroare/lipsă date dacă endpoint-ul nu există.
-            // Aici o voi lăsa să eșueze elegant dacă endpoint-ul nu e disponibil, sau poți adăuga un endpoint /api/popular în backend.
-            // Pentru scopul de a face UI-ul frumos și responsiv, nu este critic să funcționeze 100% logic aici fără un endpoint real.
-            const res = await fetch('/api/popular'); // Va eșua cu 404 cu backend-ul actual
+            const res = await fetch('/api/popular'); 
             if (res.ok) {
                 const popularData = await res.json();
                 if (popularData && popularData.length > 0) {
-                    popularList.innerHTML = ''; // Elimină placeholder-ul
+                    popularList.innerHTML = ''; 
+                    if (popularStatsInfo) { popularStatsInfo.style.display = 'none'; }
                     popularData.forEach(item => {
                         const li = document.createElement('li');
-                        // Exemplu de format: "Xiaomi Redmi Note 11 (50 vizualizări)"
                         li.textContent = `${item.name || item.model || item.type} (${item.views || item.count} vizualizări)`; 
                         popularList.appendChild(li);
                     });
                 } else {
                     popularList.innerHTML = '<li>Nu sunt statistici populare disponibile.</li>';
+                    if (popularStatsInfo) { popularStatsInfo.style.display = 'none'; } 
                 }
             } else {
-                // If the /api/popular endpoint doesn't exist or returns an error
-                console.warn('Endpoint /api/popular not found or returned error:', res.status);
-                popularList.innerHTML = '<li>Nu sunt statistici populare disponibile momentan.</li>';
+                console.warn('Endpoint /api/popular not found or returned error:', res.status, res.statusText);
+                 popularList.innerHTML = '<li>Nu sunt statistici populare disponibile momentan.</li>'; 
+                 if (popularStatsInfo) { popularStatsInfo.style.display = 'block'; } 
             }
         } catch (error) {
             console.error('Error fetching popular stats:', error);
-            popularList.innerHTML = '<li>A apărut o eroare la încărcarea statisticilor populare.</li>';
+            popularList.innerHTML = '<li>A apărut o eroare la încărcarea statisticilor populare.</li>'; 
+            if (popularStatsInfo) { popularStatsInfo.style.display = 'block'; } 
         }
     }
 
@@ -1105,7 +1149,7 @@
         window.history.pushState(null, '', '/');
         showSection(recommendationsListSection);
         fetchRecommendations();
-        fetchPopularStats(); // Reîncarcă statisticile populare
+        fetchPopularStats(); 
     });
 
     document.getElementById('searchInput').addEventListener('input', () => {
@@ -1116,31 +1160,32 @@
       fetchRecommendations(document.getElementById('searchInput').value);
     });
 
-    document.querySelectorAll('#filters input, #filters select').forEach(el => {
-      el.addEventListener('input', () => {
-        if (productDetailsSection.style.display === 'block') {
-          window.history.pushState(null, '', '/');
-          showSection(recommendationsListSection);
-        }
-        fetchRecommendations(document.getElementById('searchInput').value);
+    // MODIFICAT: Event listener pentru filtre cu validare (Re-adăugat corect)
+    document.querySelectorAll('#filters input[type="number"]').forEach(el => { 
+      el.addEventListener('input', function() { 
+          // Validare pentru input-urile de tip number
+          if (this.valueAsNumber < 0) {
+              this.value = 0; 
+          }
+           // Trigger filter fetch after validation
+           if (productDetailsSection.style.display === 'block') {
+             window.history.pushState(null, '', '/');
+             showSection(recommendationsListSection);
+           }
+           fetchRecommendations(document.getElementById('searchInput').value);
       });
     });
 
-    // --- Rutare inițială la încărcarea paginii ---
-    function handleInitialRoute() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const productId = urlParams.get('product_id');
-
-        if (productId) {
-            displayProductDetails(productId);
-        } else {
-            showSection(recommendationsListSection);
-            fetchRecommendations();
-        }
-        fetchPopularStats(); // Întotdeauna încarcă statisticile populare la inițializare
-    }
-    window.addEventListener('popstate', handleInitialRoute);
-    handleInitialRoute();
+     document.querySelectorAll('#filters select').forEach(el => { 
+       el.addEventListener('input', function() { 
+           // Trigger filter fetch for selects
+            if (productDetailsSection.style.display === 'block') {
+              window.history.pushState(null, '', '/');
+              showSection(recommendationsListSection);
+            }
+            fetchRecommendations(document.getElementById('searchInput').value);
+       });
+     });
 
 
     // --- Logica Modalului de Login/Înregistrare ---
@@ -1434,8 +1479,8 @@
             if (response.ok) {
                 showAddProductStatusMessage(data.message, 'success');
                 document.getElementById('productForm').reset();
-                fetchRecommendations(); // Reîncarcă lista de produse
-                fetchPopularStats(); // Reîncarcă statisticile populare după adăugare
+                fetchRecommendations(); 
+                fetchPopularStats(); 
                 setTimeout(() => {
                     addProductModal.style.display = 'none';
                 }, 1500);
@@ -1473,25 +1518,41 @@
         editProductStatusMessageDiv.className = '';
         
         try {
-            const res = await fetch(`/api/products/${productId}`);
+            // NOU: Verificam daca userul e admin inainte de a deschide modalul
+            const userRole = localStorage.getItem('userRole');
+            const token = localStorage.getItem('token');
+            if (userRole !== 'admin' || !token) {
+                 alert('Nu aveți permisiunea de a edita produse.'); // Poate un modal mai frumos
+                 return;
+            }
+
+            const res = await fetch(`/api/products/${productId}`, {
+                 headers: {
+                    'Authorization': `Bearer ${token}` // Adaugam tokenul la cererea GET pentru a verifica permisiunea
+                 }
+            });
             const product = await res.json();
 
             if (res.ok) {
                 editProductIdInput.value = product.id;
                 editProductNameInput.value = product.name;
                 editProductPriceInput.value = product.price;
-                editProductBatteryLifeInput.value = product.batterylife || ''; // Use empty string for null/undefined
+                editProductBatteryLifeInput.value = product.batterylife || ''; 
                 editProductTypeInput.value = product.type;
                 editProductFeaturesInput.value = product.features.join(', ');
-                editProductLinkInput.value = product.link && product.link !== 'null' ? product.link : ''; // Use empty string for null/undefined/literal 'null'
+                editProductLinkInput.value = product.link && product.link !== 'null' ? product.link : ''; 
 
                 editProductModal.style.display = 'flex';
             } else {
-                showEditProductStatusMessage(product.message || 'Eroare la preluarea datelor produsului pentru editare.', 'error');
+                // Gestionam erorile de la API-ul GET (ex: 404, 403)
+                showEditProductStatusMessage(product.message || `Eroare la preluarea datelor produsului (Status: ${res.status}).`, 'error');
+                 // Oprim afisarea modalului sau il ascundem daca a aparut o eroare dupa deschidere
+                 editProductModal.style.display = 'none'; // Added hide in case of error
             }
         } catch (error) {
             console.error('Error fetching product for edit:', error);
-            showEditProductStatusMessage('A apărut o eroare la încărcarea datelor produsului pentru editare.', 'error');
+            showEditProductStatusMessage('A apărut o eroare la încărcarea datelor produsului pentru editare. Verificați conexiunea și autentificarea.', 'error');
+             editProductModal.style.display = 'none'; // Added hide in case of error
         }
     }
 
@@ -1537,7 +1598,7 @@
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${token}` // Adaugam tokenul
                 },
                 body: JSON.stringify({ name, price, batteryLife, type, features, link })
             });
@@ -1547,47 +1608,56 @@
             if (response.ok) {
                 showEditProductStatusMessage(data.message, 'success');
                 fetchRecommendations(); // Reîncarcă lista de produse
-                fetchPopularStats(); // Reîncarcă statisticile populare după editare
+                fetchPopularStats(); 
                 // Afișează detaliile produsului actualizat dacă utilizatorul era pe acea pagină
                 const urlParams = new URLSearchParams(window.location.search);
                 if (urlParams.get('product_id') === productId.toString()) {
-                    displayProductDetails(productId);
+                    displayProductDetails(productId); // Reîncarcă detaliile produsului afișat
                 }
 
                 setTimeout(() => {
                     editProductModal.style.display = 'none';
                 }, 1500);
             } else {
-                showEditProductStatusMessage(data.message || 'Eroare la actualizarea produsului.', 'error');
+                // Gestionam erorile de la API-ul PUT (ex: 400, 403, 404, 500)
+                showEditProductStatusMessage(data.message || `Eroare la actualizarea produsului (Status: ${response.status}).`, 'error');
             }
         } catch (error) {
             console.error('Eroare la actualizarea produsului:', error);
-            showEditProductStatusMessage('A apărut o eroare la trimiterea datelor. Vă rugăm să încercați din nou.', 'error');
+            showEditProductStatusMessage('A apărut o eroare la trimiterea datelor de actualizare. Verificați conexiunea și autentificarea.', 'error');
         }
     });
 
     // Funcție pentru Ștergere Produs
     async function deleteProduct(productId) {
         const token = localStorage.getItem('token');
-        if (!token) {
-            alert('Nu sunteți autentificat. Vă rugăm să vă conectați ca administrator.'); // Consideră un modal personalizat în loc de alert
+        const userRole = localStorage.getItem('userRole'); // NOU: Verificam rolul inainte
+        
+        if (userRole !== 'admin' || !token) { // NOU: Verificam rolul
+            alert('Nu aveți permisiunea de a șterge produse. Vă rugăm să vă conectați ca administrator.'); 
             return;
         }
+
+        // Folosim confirmarea implicita a browserului
+        if (!confirm('Ești sigur că vrei să ștergi acest produs?')) {
+             return; // User clicked Cancel
+        }
+
 
         try {
             const response = await fetch(`/api/products/${productId}`, {
                 method: 'DELETE',
                 headers: {
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${token}` // Adaugam tokenul
                 }
             });
 
             const data = await response.json();
 
             if (response.ok) {
-                alert(data.message); // Consideră un modal personalizat în loc de alert
-                fetchRecommendations(); // Reîncarcă lista de produse
-                fetchPopularStats(); // Reîncarcă statisticile populare după ștergere
+                alert(data.message); 
+                fetchRecommendations(); 
+                fetchPopularStats(); 
 
                  // If the deleted product details page was active, go back to the list
                  const urlParams = new URLSearchParams(window.location.search);
@@ -1597,11 +1667,12 @@
                  }
 
             } else {
-                alert(data.message || 'Eroare la ștergerea produsului.'); // Consideră un modal personalizat în loc de alert
+                 // Gestionam erorile de la API-ul DELETE (ex: 403, 404, 500)
+                alert(data.message || `Eroare la ștergerea produsului (Status: ${response.status}).`); 
             }
         } catch (error) {
             console.error('Eroare la ștergerea produsului:', error);
-            alert('A apărut o eroare la ștergerea produsului. Vă rugăm să încercați din nou.'); // Consideră un modal personalizat în loc de alert
+            alert('A apărut o eroare la ștergerea produsului. Verificați conexiunea și autentificarea.'); 
         }
     }
 

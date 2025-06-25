@@ -7,66 +7,38 @@ const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const RSS = require('rss');
-const fetch = require('node-fetch');
-const cheerio = require('cheerio');
+const fetch = require('node-fetch'); // Adaugă import pentru node-fetch
+const cheerio = require('cheerio'); // Adaugă import pentru cheerio
 
-// Glitch folosește un fișier .env și expune portul prin process.env.PORT
-// Asigură-te că ai un fișier .env pe Glitch cu chei ca DB_HOST, DB_PASSWORD etc.
-const PORT = process.env.PORT || 3000;
-const JWT_SECRET = process.env.JWT_SECRET || 'your_super_secret_jwt_key_12345'; // Folosește o variabilă de mediu pentru securitate
+const PORT = 3000;
+// Acest secret este folosit de server PENTRU A SEMNA PROPRIILE TOKEN-URI JWT pentru autentificarea userilor aplicației.
+// NU este cheia Anon sau Service Role de la Supabase pentru API, nici parola bazei de date.
+const JWT_SECRET = process.env.JWT_SECRET || 'your_super_secret_jwt_key_12345';
 
-// --- Supabase PostgreSQL Database Configuration (using Environment Variables from .env) ---
+// --- Supabase PostgreSQL Database Configuration ---
 const pool = new Pool({
-  // !!! IMPORTANT PENTRU GLITCH !!!
-  // Creează un fișier numit .env în directorul rădăcină al proiectului tău pe Glitch.
-  // Adaugă liniile de mai jos în fișierul .env (înlocuind valorile placeholder):
-  // DB_USER=postgres
-  // DB_HOST=db.wpbeibnkbpwbnvuaqssj.supabase.co  (SAU ADRESA IPv4 DACĂ IPV6 DĂ ERORI pe Glitch)
-  // DB_NAME=postgres
-  // DB_PASSWORD=PAROLA_TA_REALA_DE_LA_BazaDeDate_SUPABASE  <--- PAROLA REALĂ!
-  // DB_PORT=5432
-  // JWT_SECRET=o_cheie_secreta_complexa_si_unica
-  // Glitch va încărca automat aceste valori în process.env
+  // !!! IMPORTANT !!!
+  // Înlocuiește aceste valori cu credențialele REALE ALE BAZEI DE DATE de la Supabase.
+  // Acestea le găsești în dashboard-ul Supabase, secțiunea:
+  // Project Settings -> Database -> Connection string -> Node.js
+  // Cheia 'anon' pe care ai furnizat-o NU este parola bazei de date.
 
-  user: process.env.DB_USER || 'postgres',
-  host: process.env.DB_HOST,            // Citit din .env (Hostname-ul care se poate rezolva și la IPv6)
-  database: process.env.DB_NAME || 'postgres',
-  password: process.env.DB_PASSWORD,        // Citit din .env (NU PUNE PAROLA REALĂ AICI DIRECT ÎN COD!)
-  port: process.env.DB_PORT || 5432,
+  user: 'postgres', // De obicei este 'postgres'
+  host: 'postgres.cluster-ctck2644kzwq.eu-north-1.rds.amazonaws.com', // <--- FOLOSIM HOST-UL SPECIFICAT
+  database: 'postgres123', // De obicei este 'postgres'
+  password: 'Postgres123.', // <--- !!! ÎNLOCUIEȘTE ACEASTA CU PAROLA TA REALĂ A BAZEI DE DATE SUPABASE !!!
+  port: 5432, // Default PostgreSQL port
 
   // Supabase necesită conexiune SSL
   ssl: {
-      // Pe Glitch, s-ar putea să fie necesar rejectUnauthorized: false, dar încearcă întâi true sau elimină-l
-      // Render cerea false, Glitch ar putea fi diferit. Începe cu false dacă ai probleme.
-      rejectUnauthorized: false // Poți încerca true dacă false dă erori legate de certificat
+      rejectUnauthorized: false // Setează true în producție dacă ai certificat, false pentru dezvoltare
   }
-
-  // LINIA family: 4 A FOST ELIMINATĂ CONFORM CERINȚEI.
-  // Librăria pg va încerca acum să folosească IPv6 dacă DNS-ul îl returnează și dacă sistemul de operare permite.
 });
 
 // Test database connection
 pool.connect((err, client, done) => {
   if (err) {
     console.error('Database connection failed:', err.stack);
-    console.error('DB Config used (without password):', {
-        user: pool.options.user,
-        host: pool.options.host,
-        database: pool.options.database,
-        port: pool.options.port,
-        ssl_rejectUnauthorized: pool.options.ssl.rejectUnauthorized,
-        // family: pool.options.family, // Nu va apărea dacă linia e comentată
-    });
-    console.error('Environment Variables check (password status):', {
-        DB_USER_IS_SET: !!process.env.DB_USER,
-        DB_HOST_IS_SET: !!process.env.DB_HOST,
-        DB_NAME_IS_SET: !!process.env.DB_NAME,
-        DB_PASSWORD_IS_SET: !!process.env.DB_PASSWORD, // TRUE if set, FALSE if not
-        DB_PORT_IS_SET: !!process.env.DB_PORT,
-        JWT_SECRET_IS_SET: !!process.env.JWT_SECRET,
-        NODE_ENV: process.env.NODE_ENV,
-    });
-
   } else {
     console.log('Successfully connected to the Supabase PostgreSQL database.');
     client.release();
@@ -103,37 +75,40 @@ function parseBody(req) {
   });
 }
 
-// --- Helper to serve static files ---
-function serveStatic(res, filePathRelative) {
+// --- Helper to serve static files from 'public' directory ---
+function serveStatic(res, pathname) {
    if (res.headersSent) {
         console.warn('Attempted to serve static file after headers sent!');
         return;
     }
 
-   const baseDir = __dirname;
-   let fullPath = path.join(baseDir, filePathRelative);
+  let filePath;
+  if (pathname === '/') {
+      filePath = path.join(__dirname, 'index.html');
+  } else if (pathname === '/product-details.html') {
+      filePath = path.join(__dirname, 'product-details.html');
+  } else if (pathname === '/favorites.html') {
+      filePath = path.join(__dirname, 'favorites.html');
+  } else {
+       filePath = path.join(__dirname, 'public', pathname);
+       const rootFallbackPath = path.join(__dirname, pathname);
+        if (!fs.existsSync(filePath) && fs.existsSync(rootFallbackPath)) {
+             filePath = rootFallbackPath;
+        }
+  }
 
-   if (filePathRelative === '/' || filePathRelative === 'index.html') {
-        fullPath = path.join(baseDir, 'index.html');
-   } else if (filePathRelative === 'product-details.html') {
-        fullPath = path.join(baseDir, 'product-details.html');
-   } else if (filePathRelative === 'favorites.html') {
-        fullPath = path.join(baseDir, 'favorites.html');
-   } else {
-        fullPath = path.join(baseDir, filePathRelative);
-   }
+    const finalPath = filePath;
 
-
-  fs.readFile(fullPath, (err, data) => {
+  fs.readFile(finalPath, (err, data) => {
     if (err) {
-        console.error(`Error reading file ${fullPath}:`, err.message);
+        console.error(`Error reading file ${finalPath}:`, err.message);
          if (!res.headersSent) {
             res.writeHead(404, { 'Access-Control-Allow-Origin': '*' });
             res.end('Not found');
          }
     } else {
          if (!res.headersSent) {
-            const ext = path.extname(fullPath);
+            const ext = path.extname(finalPath);
             const contentType = {
                 '.html': 'text/html',
                 '.css': 'text/css',
@@ -144,15 +119,13 @@ function serveStatic(res, filePathRelative) {
                 '.jpg': 'image/jpeg',
                 '.gif': 'image/gif',
                 '.svg': 'image/svg+xml',
-                '.webmanifest': 'application/manifest+json'
-            }[ext.toLowerCase()] || 'text/plain';
+            }[ext] || 'text/plain';
             res.writeHead(200, { 'Content-Type': contentType, 'Access-Control-Allow-Origin': '*' });
             res.end(data);
          }
     }
   });
 }
-
 
 // --- Middleware for authenticating JWT tokens ---
 function authenticateToken(req, res, callback) {
@@ -182,69 +155,70 @@ async function scrapeProductPage(productUrl) {
 
         // ACESTA ESTE EXEMPLUL DE SELECTORI.
         // VEI TREBUI SĂ-I MODIFICI ÎN FUNCȚIE DE STRUCTURA HTML A SITE-URILOR PE CARE VREI SĂ LE SCRAPEZI.
+        // Ex: pentru un produs de pe eMAG, Altex, Cel.ro etc.
 
-        let name = $('h1.page-title').text().trim();
-        // Compatibilitate extinsă pentru Optional Chaining
-        if (!name) {
-             const ogTitleMeta = $('meta[property="og:title"]');
-             if (ogTitleMeta.length > 0) {
-                 const ogTitleContent = ogTitleMeta.attr('content');
-                 if (ogTitleContent) {
-                     name = ogTitleContent.trim();
+        let name = $('h1.page-title').text().trim(); // Un selector comun pentru titlu
+        if (!name) name = $('meta[property="og:title"]').attr('content')?.trim(); // Fallback pentru Open Graph title
+
+        let priceText = $('.product-price-now').text().trim(); // Selector pentru preț
+        if (!priceText) priceText = $('[data-price]').attr('data-price')?.trim(); // Alt posibil selector
+        let price = priceText ? parseFloat(priceText.replace(/[^\d.,]/g, '').replace(',', '.')) : null;
+
+        let batteryLife = null; // Va trebui să cauți cum e afișată autonomia bateriei
+        // Exemplu: căutăm un paragraf sau li care conține "baterie" sau "autonomie"
+        $('p, li, span, div').each((i, el) => { // Include div for broader search
+            const text = $(el).text().toLowerCase();
+            if (text.includes('baterie') || text.includes('autonomie')) {
+                const match = text.match(/(\d+)\s*(ore|h)/); // Captures number followed by 'ore' or 'h'
+                if (match && match[1]) {
+                    batteryLife = parseInt(match[1], 10);
+                    return false; // Ieșim din each odată ce găsim
+                }
+            }
+             // Alternative: look for mAh values and try to estimate hours (more complex)
+             if (!batteryLife && text.includes('mah')) {
+                 const mahMatch = text.match(/(\d+)\s*mah/);
+                 if (mahMatch && mahMatch[1]) {
+                     const mah = parseInt(mahMatch[1], 10);
+                     // Simple estimation: 1 hour per 200-300 mAh? Varies greatly.
+                     // This is a very rough guess. Better to look for explicit hours.
+                     if (mah > 0) {
+                          // batteryLife = Math.round(mah / 250); // Example estimation
+                          // For now, let's only rely on explicit hour mentions.
+                     }
                  }
              }
-        }
-
-
-        let priceText = $('.product-price-now, .product-price span, .price').first().text().trim();
-        if (!priceText) { // Fallback if common price selectors fail
-            const dataPriceAttrElement = $('[data-price]').first();
-            if (dataPriceAttrElement.length > 0) {
-                 const dataPriceAttr = dataPriceAttrElement.attr('data-price');
-                 if (dataPriceAttr) priceText = dataPriceAttr.trim();
-            }
-        }
-
-        let price = null;
-        if (priceText) {
-            const cleanedPriceText = priceText.replace(/[^0-9.,]/g, '').replace(',', '.');
-            price = parseFloat(cleanedPriceText);
-        }
-        price = isNaN(price) ? 0 : price;
-
-
-        let batteryLife = null;
-        $('p, li, span, div, td').each((i, el) => {
-            const text = $(el).text().toLowerCase();
-            const matchHours = text.match(/(\d+)\s*(ore|h)\b/);
-            if (matchHours && matchHours[1]) {
-                batteryLife = parseInt(matchHours[1], 10);
-                return false;
-            }
         });
 
 
+        // Caracteristicile sunt cel mai greu de scrapuit generic.
+        // Aici vei dori probabil să cauți o listă de "specificații" sau "caracteristici"
         const features = [];
-        $('.specs-list li, .features-list li, .description-content p, .product-attributes li, .details-section li').each((i, el) => {
+        // Look in common places for specs lists
+        $('.specs-list li, .features-list li, .description-content p, .product-attributes li').each((i, el) => {
             const featureText = $(el).text().trim();
-            if (featureText.length > 5 && features.length < 15 && !features.includes(featureText) && !featureText.toLowerCase().includes('specificații generale')) {
+             // Avoid adding empty or very short items, limit total features
+            if (featureText.length > 5 && features.length < 10 && !features.includes(featureText)) {
                 features.push(featureText);
             }
         });
-         if (features.length < 5) {
+        // Fallback: search for common tech terms in the page text if no list found
+        if (features.length === 0) {
              const pageText = $('body').text().toLowerCase();
-             const keywords = ['5g', 'android', 'ios', 'bluetooth', 'wifi', 'gps', 'oled', 'amoled', 'lcd', 'rezistent la apă', 'dual sim', 'camera', 'procesor', 'gb ram', 'gb stocare', 'usb-c', 'nfc', 'jack 3.5mm', 'incarcare wireless'];
+             const keywords = ['5g', 'android', 'ios', 'bluetooth', 'wifi', 'gps', 'oled', 'amoled', 'lcd', 'rezistent la apă', 'dual sim', 'camera', 'procesor', 'gb ram', 'gb stocare']; // Add relevant keywords
              keywords.forEach(keyword => {
-                 if (pageText.includes(keyword) && features.length < 15) {
+                 if (pageText.includes(keyword)) {
+                      // Capitalize keywords for better display
                      const displayKeyword = keyword.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
                      if (!features.includes(displayKeyword)) {
                           features.push(displayKeyword);
                      }
                  }
              });
-         }
+        }
 
 
+        // Tipul produsului ar putea fi inferat din URL sau din breadcrumbs
         let type = null;
         const lowerUrl = productUrl.toLowerCase();
         if (lowerUrl.includes('telefon') || lowerUrl.includes('smartphone')) type = 'telefon';
@@ -254,6 +228,7 @@ async function scrapeProductPage(productUrl) {
         else if (lowerUrl.includes('laptop') || lowerUrl.includes('notebook')) type = 'laptop';
         else if (lowerUrl.includes('casti') || lowerUrl.includes('headphones') || lowerUrl.includes('earbuds')) type = 'casti';
         else {
+             // Attempt to guess from the name if available
              const lowerName = name ? name.toLowerCase() : '';
              if (lowerName.includes('telefon') || lowerName.includes('smartphone')) type = 'telefon';
              else if (lowerName.includes('tableta') || lowerName.includes('tablet')) type = 'tableta';
@@ -262,14 +237,23 @@ async function scrapeProductPage(productUrl) {
              else if (lowerName.includes('laptop') || lowerName.includes('notebook')) type = 'laptop';
              else if (lowerName.includes('casti') || lowerName.includes('headphones') || lowerName.includes('earbuds')) type = 'casti';
         }
-        type = type || 'necunoscut';
+        type = type || 'necunoscut'; // Default if couldn't guess
 
+        // Extract image URL
         let imageUrl = $('meta[property="og:image"]').attr('content');
-        if (!imageUrl) imageUrl = $('img.product-main-image').attr('src');
-        if (!imageUrl) imageUrl = $('img[itemprop="image"]').attr('src');
-        if (!imageUrl) imageUrl = $('a.thumbnail img').attr('src');
-        if (!imageUrl) imageUrl = $('img[alt*="' + (name || '').substring(0, 15) + '"]').attr('src');
-
+        if (!imageUrl) {
+            imageUrl = $('img.product-main-image').attr('src'); // Common image selector
+        }
+        if (!imageUrl) {
+            imageUrl = $('img[itemprop="image"]').attr('src'); // Schema.org image selector
+        }
+        if (!imageUrl) {
+             imageUrl = $('a.thumbnail img').attr('src'); // Example for thumbnail images
+        }
+         if (!imageUrl) {
+             imageUrl = $('img[alt="' + name + '"]').attr('src'); // Try finding image by alt text
+         }
+        // Ensure the image URL is absolute
         if (imageUrl && !imageUrl.startsWith('http')) {
             try {
                 imageUrl = new URL(imageUrl, productUrl).href;
@@ -277,27 +261,25 @@ async function scrapeProductPage(productUrl) {
                 console.warn(`Could not resolve relative image URL: ${imageUrl}`);
                 imageUrl = null;
             }
-        } else if (imageUrl && imageUrl.startsWith('//')) {
-             imageUrl = 'http:' + imageUrl;
-        }
-        if (imageUrl && (imageUrl.length < 15 || imageUrl.includes('data:image'))) {
-            imageUrl = null;
+        } else if (imageUrl && imageUrl.startsWith('//')) { // Handle protocol-relative URLs
+             imageUrl = 'http:' + imageUrl; // Or 'https:'
         }
 
 
+        // Returnează un obiect cu datele extrase
         return {
             name: name || 'Produs necunoscut',
-            price: price,
+            price: price || 0,
             batterylife: batteryLife,
             type: type,
             features: features.length > 0 ? features : ['Caracteristici N/A'],
             link: productUrl,
-            image: imageUrl || null
+            image: imageUrl || null // Add the image URL here
         };
 
     } catch (error) {
         console.error(`Eroare la scraping URL: ${productUrl}`, error.message);
-        return { error: `Scraping failed for ${productUrl}: ${error.message}` };
+        return null;
     }
 }
 
@@ -307,6 +289,7 @@ http.createServer(async (req, res) => {
   const parsedUrl = url.parse(req.url, true);
   let pathname = parsedUrl.pathname;
 
+  // Handle CORS preflight requests
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -316,16 +299,25 @@ http.createServer(async (req, res) => {
   }
 
   // --- Static File Serving ---
-   if (req.method === 'GET' && pathname !== '/rss' && !pathname.startsWith('/api/')) {
-      return serveStatic(res, pathname === '/' ? 'index.html' : pathname);
-   }
+  if (req.method === 'GET' && !pathname.startsWith('/api') && pathname !== '/rss') {
+      // Specific paths for root-level HTML files
+      if (pathname === '/' || pathname === '/index.html') {
+          return serveStatic(res, 'index.html');
+      } else if (pathname === '/product-details.html') {
+          return serveStatic(res, 'product-details.html');
+      } else if (pathname === '/favorites.html') {
+          return serveStatic(res, 'favorites.html');
+      }
+      // Serve other files from the root directory (CSS, JS, etc.)
+      return serveStatic(res, pathname);
+  }
 
 
   // --- API Endpoint: Device Recommendations ---
   if (req.method === 'GET' && pathname === '/api/recommendations') {
     const { q = '', minPrice, maxPrice, batteryLife, deviceType } = parsedUrl.query;
 
-    let queryText = 'SELECT id, name, price, batterylife, type, features, link, image FROM products WHERE 1=1';
+    let queryText = 'SELECT id, name, price, batterylife, type, features, link, image FROM products WHERE 1=1'; // Added 'image'
     const queryParams = [];
     let paramIndex = 1;
 
@@ -343,12 +335,12 @@ http.createServer(async (req, res) => {
     }
     if (deviceType) {
         queryText += ` AND type = $${paramIndex++}`;
-        queryParams.push(deviceType.toLowerCase());
+        queryParams.push(deviceType.toLowerCase()); // Store and search type as lowercase
     }
 
     if (q) {
         const searchTerm = `%${q.toLowerCase()}%`;
-        queryText += ` AND (name ILIKE $${paramIndex++} OR EXISTS (SELECT 1 FROM UNNEST(features) AS feature WHERE feature ILIKE $${paramIndex++}) OR type ILIKE $${paramIndex++})`;
+        queryText += ` AND (name ILIKE $${paramIndex++} OR EXISTS (SELECT 1 FROM UNNEST(features) AS feature WHERE feature ILIKE $${paramIndex++}) OR type ILIKE $${paramIndex++})`; // Search in name, features, AND type
         queryParams.push(searchTerm, searchTerm, searchTerm);
     }
 
@@ -356,6 +348,7 @@ http.createServer(async (req, res) => {
 
     try {
         const { rows } = await pool.query(queryText, queryParams);
+         // Ensure features array is handled correctly if stored as string (though should be text[])
          const formattedRows = rows.map(row => ({
              ...row,
              features: Array.isArray(row.features) ? row.features : (typeof row.features === 'string' ? row.features.split(',').map(f => f.trim()).filter(f => f.length > 0) : [])
@@ -375,8 +368,9 @@ http.createServer(async (req, res) => {
         return sendJSON(res, { message: 'ID produs invalid.' }, 400);
     }
     try {
-        const { rows } = await pool.query('SELECT id, name, price, batterylife, type, features, link, image FROM products WHERE id = $1', [productId]);
+        const { rows } = await pool.query('SELECT id, name, price, batterylife, type, features, link, image FROM products WHERE id = $1', [productId]); // Added 'image'
         if (rows.length > 0) {
+             // Ensure features array is handled correctly
             const product = rows[0];
              product.features = Array.isArray(product.features) ? product.features : (typeof product.features === 'string' ? product.features.split(',').map(f => f.trim()).filter(f => f.length > 0) : []);
             return sendJSON(res, product);
@@ -397,14 +391,14 @@ http.createServer(async (req, res) => {
       }
 
       try {
-        const { name, price, batteryLife, type, features, link, image } = await parseBody(req);
+        const { name, price, batteryLife, type, features, link, image } = await parseBody(req); // Added 'image'
 
         if (!name || typeof name !== 'string' || name.trim() === '') {
             return sendJSON(res, { message: 'Numele produsului este obligatoriu.' }, 400);
         }
          const parsedPrice = parseFloat(price);
          if (isNaN(parsedPrice) || parsedPrice <= 0) {
-              return sendJSON(res, { message: 'Prețul produsului trebuie să fie un număr pozitiv valid.' }, 400);
+             return sendJSON(res, { message: 'Prețul produsului trebuie să fie un număr pozitiv valid.' }, 400);
          }
          if (!type || typeof type !== 'string' || type.trim() === '') {
              return sendJSON(res, { message: 'Tipul produsului este obligatoriu.' }, 400);
@@ -417,11 +411,11 @@ http.createServer(async (req, res) => {
          }
         const parsedBatteryLife = batteryLife ? parseInt(batteryLife, 10) : null;
         const parsedLink = link && typeof link === 'string' && link.trim() !== '' ? link.trim() : null;
-        const parsedImage = image && typeof image === 'string' && image.trim() !== '' ? image.trim() : null;
+        const parsedImage = image && typeof image === 'string' && image.trim() !== '' ? image.trim() : null; // Handle image
 
         const result = await pool.query(
-          'INSERT INTO products (name, price, batterylife, type, features, link, image) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, name',
-          [name.trim(), parsedPrice, parsedBatteryLife, type.trim().toLowerCase(), featuresArray, parsedLink, parsedImage]
+          'INSERT INTO products (name, price, batterylife, type, features, link, image) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, name', // Added 'image'
+          [name.trim(), parsedPrice, parsedBatteryLife, type.trim().toLowerCase(), featuresArray, parsedLink, parsedImage] // Store type as lowercase
         );
         return sendJSON(res, { message: 'Produs adăugat cu succes!', product: result.rows[0] }, 201);
       } catch (error) {
@@ -445,7 +439,7 @@ http.createServer(async (req, res) => {
       }
 
       try {
-        const { name, price, batteryLife, type, features, link, image } = await parseBody(req);
+        const { name, price, batteryLife, type, features, link, image } = await parseBody(req); // Added 'image'
 
          if (!name || typeof name !== 'string' || name.trim() === '') {
              return sendJSON(res, { message: 'Numele produsului este obligatoriu.' }, 400);
@@ -465,11 +459,11 @@ http.createServer(async (req, res) => {
           }
          const parsedBatteryLife = batteryLife ? parseInt(batteryLife, 10) : null;
          const parsedLink = link && typeof link === 'string' && link.trim() !== '' ? link.trim() : null;
-         const parsedImage = image && typeof image === 'string' && image.trim() !== '' ? image.trim() : null;
+         const parsedImage = image && typeof image === 'string' && image.trim() !== '' ? image.trim() : null; // Handle image
 
         const result = await pool.query(
-          'UPDATE products SET name = $1, price = $2, batterylife = $3, type = $4, features = $5, link = $6, image = $7 WHERE id = $8 RETURNING id, name',
-          [name.trim(), parsedPrice, parsedBatteryLife, type.trim().toLowerCase(), featuresArray, parsedLink, parsedImage, productId]
+          'UPDATE products SET name = $1, price = $2, batterylife = $3, type = $4, features = $5, link = $6, image = $7 WHERE id = $8 RETURNING id, name', // Added 'image'
+          [name.trim(), parsedPrice, parsedBatteryLife, type.trim().toLowerCase(), featuresArray, parsedLink, parsedImage, productId] // Store type as lowercase
         );
 
         if (result.rows.length > 0) {
@@ -484,43 +478,27 @@ http.createServer(async (req, res) => {
     });
   }
 
-  // --- API Endpoint: Delete Product (Admin only) ---
-  const deleteProductMatch = pathname.match(/^\/api\/products\/(\d+)$/);
-  if (req.method === 'DELETE' && deleteProductMatch) {
-    return authenticateToken(req, res, async () => {
-      if (req.user.role !== 'admin') {
-        return sendJSON(res, { message: 'Acces interzis. Doar administratorii pot șterge produse.' }, 403);
-      }
-
-      const productId = parseInt(deleteProductMatch[1], 10);
-      if (isNaN(productId)) {
-        return sendJSON(res, { message: 'ID produs invalid.' }, 400);
-      }
-
-      try {
-        const result = await pool.query('DELETE FROM products WHERE id = $1 RETURNING id', [productId]);
-        if (result.rows.length > 0) {
-          return sendJSON(res, { message: 'Produs șters cu succes!', id: result.rows[0].id });
-        } else {
-          return sendJSON(res, { message: 'Produsul nu a fost găsit pentru ștergere.' }, 404);
-        }
-      } catch (error) {
-        console.error('SERVER ERROR deleting product:', error.message, error.stack);
-        return sendJSON(res, { message: 'Eroare de server la ștergerea produsului.', error: error.message }, 500);
-      }
-    });
-  }
-
   // --- API Endpoint: Popular Statistics (Placeholder) ---
+  // This endpoint is referenced in index.html but not implemented in the original server.js.
+  // Adding a basic placeholder response. Real implementation would involve tracking views/clicks.
   if (req.method === 'GET' && pathname === '/api/popular') {
       try {
-           const { rows } = await pool.query('SELECT id, name FROM products ORDER BY RANDOM() LIMIT 5');
-           const popularItems = rows.map(row => ({ name: row.name, views: Math.floor(Math.random() * 100) + 50 }));
+           // In a real app, query the DB for popular items based on views/clicks
+           // Example: SELECT product_id, COUNT(*) as views FROM product_views GROUP BY product_id ORDER BY views DESC LIMIT 5;
+           // For now, return dummy data or an empty array
+           // Or, fetch top viewed products from the database if view tracking is implemented
+           const { rows } = await pool.query('SELECT id, name FROM products ORDER BY RANDOM() LIMIT 5'); // Just fetch random products as a placeholder
+           const popularItems = rows.map(row => ({ name: row.name, views: Math.floor(Math.random() * 100) + 50 })); // Add dummy view counts
 
-          return sendJSON(res, popularItems);
+           // If view tracking exists, replace the above dummy logic with real data query
+           // const { rows: popularRows } = await pool.query(/* Your query for popular items */);
+           // const popularItems = popularRows; // Assuming popularRows has { name, views } structure
+
+          return sendJSON(res, popularItems); // Return the list of popular items
       } catch (error) {
           console.error('Error fetching popular stats:', error);
-          return sendJSON(res, [], 500);
+          // Fallback to an empty list or error message if DB query fails
+          return sendJSON(res, [], 500); // Returning empty array might be safer than error
       }
   }
 
@@ -531,7 +509,7 @@ http.createServer(async (req, res) => {
         const { limit } = parsedUrl.query;
         const queryLimit = (limit && parseInt(limit, 10) > 0) ? parseInt(limit, 10) : 100;
 
-        let queryText = 'SELECT id, name, price, batterylife, type, features, link, created_at, image FROM products ORDER BY created_at DESC';
+        let queryText = 'SELECT id, name, price, batterylife, type, features, link, created_at, image FROM products ORDER BY created_at DESC'; // Added 'image'
         const queryParams = [];
 
         if (queryLimit > 0) {
@@ -544,23 +522,19 @@ http.createServer(async (req, res) => {
         const feed = new RSS({
           title: 'Ultimele Recomandări de Dispozitive Electronice',
           description: 'Cele mai recent adăugate dispozitive electronice',
-          feed_url: process.env.APP_BASE_URL ? `${process.env.APP_BASE_URL}/rss` : `http://localhost:${PORT}/rss`,
-          site_url: process.env.APP_BASE_URL || `http://localhost:${PORT}`,
+          feed_url: `http://localhost:${PORT}/rss`,
+          site_url: `http://localhost:${PORT}`,
           language: 'ro'
         });
 
         rows.forEach(d => {
-          const productDetailUrl = process.env.APP_BASE_URL
-            ? `${process.env.APP_BASE_URL}/product-details.html?product_id=${d.id}`
-            : `http://localhost:${PORT}/product-details.html?product_id=${d.id}`;
-
           feed.item({
             title: d.name,
-            description: `Preț: ${d.price} Lei, Autonomie: ${d.batterylife ? d.batterylife + ' ore' : 'N/A'}, Tip: ${d.type}, Caracteristici: ${Array.isArray(d.features) ? d.features.join(', ') : 'N/A'}`,
-            url: d.link && d.link !== 'null' && d.link.trim() !== '' ? d.link : productDetailUrl,
+            description: `Preț: ${d.price} Lei, Autonomie: ${d.batterylife ? d.batterylife + ' ore' : 'N/A'}, Tip: ${d.type}, Caracteristici: ${Array.isArray(d.features) ? d.features.join(', ') : 'N/A'}`, // Ensure features is treated as array
+            url: d.link && d.link !== 'null' && d.link.trim() !== '' ? d.link : `http://localhost:${PORT}/product-details.html?product_id=${d.id}`, // Link to product details page
             date: d.created_at || new Date(),
             guid: d.id,
-            enclosure: d.image ? { url: d.image, type: 'image/jpeg' } : undefined
+            enclosure: d.image ? { url: d.image, type: 'image/jpeg' } : undefined // Add image to RSS feed
           });
         });
 
@@ -578,7 +552,7 @@ http.createServer(async (req, res) => {
       const { username, password, role } = await parseBody(req);
 
       if (!username || !password) {
-        return sendJSON(res, { message: 'Numele de utilizator și parola sunt obligatorii.', field: 'username' }, 400);
+        return sendJSON(res, { message: 'Numele de utilizator și parola sunt obligatorii.' }, 400);
       }
 
       const minLength = 6;
@@ -586,18 +560,18 @@ http.createServer(async (req, res) => {
       const hasDigit = /\d/.test(password);
 
       if (password.length < minLength) {
-        return sendJSON(res, { message: `Parola trebuie să aibă minim ${minLength} caractere.`, field: 'password' }, 400);
+        return sendJSON(res, { message: `Parola trebuie să aibă minim ${minLength} caractere.` }, 400);
       }
       if (!hasUppercase) {
-        return sendJSON(res, { message: 'Parola trebuie să conțină cel puțin o literă mare.', field: 'password' }, 400);
+        return sendJSON(res, { message: 'Parola trebuie să conțină cel puțin o literă mare.' }, 400);
       }
       if (!hasDigit) {
-        return sendJSON(res, { message: 'Parola trebuie să conțină cel puțin o cifră.', field: 'password' }, 400);
+        return sendJSON(res, { message: 'Parola trebuie să conțină cel puțin o cifră.' }, 400);
       }
 
       const userCheck = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
       if (userCheck.rows.length > 0) {
-        return sendJSON(res, { message: 'Numele de utilizator există deja.', field: 'username' }, 409);
+        return sendJSON(res, { message: 'Numele de utilizator există deja.' }, 409);
       }
 
       let finalRole = 'user';
@@ -609,7 +583,7 @@ http.createServer(async (req, res) => {
               console.log(`Permitting first user "${username}" to register as admin.`);
           } else {
               console.warn(`Attempted admin registration for "${username}" but admin already exists.`);
-              finalRole = 'user';
+              finalRole = 'user'; // Force to user if admin already exists
           }
       } else {
           finalRole = 'user';
@@ -629,14 +603,12 @@ http.createServer(async (req, res) => {
         ? 'Utilizator admin înregistrat cu succes! (Sunteți primul admin)'
         : 'Utilizator înregistrat cu succes!';
 
-      return sendJSON(res, { message: message }, 201);
-
+      // Log in the user automatically after successful registration? Or require them to log in?
+      // Let's not auto-login here, just confirm registration.
+      return sendJSON(res, { message: message, user: { id: newUser.id, username: newUser.username, role: newUser.role } }, 201);
 
     } catch (error) {
       console.error('Eroare la înregistrarea utilizatorului:', error.message, error.stack);
-      if (error.code === '23505') {
-          return sendJSON(res, { message: 'Numele de utilizator există deja.', field: 'username' }, 409);
-      }
       return sendJSON(res, { message: 'Eroare de server la înregistrare.', error: error.message }, 500);
     }
   }
@@ -654,19 +626,19 @@ http.createServer(async (req, res) => {
       const user = result.rows[0];
 
       if (!user) {
-        return sendJSON(res, { message: 'Nume de utilizator sau parolă incorecte.' }, 400);
+        return sendJSON(res, { message: 'Nume de utilizator sau parolă incorecte.' }, 400); // More generic message
       }
 
       const isMatch = await bcrypt.compare(password, user.password_hash);
 
       if (!isMatch) {
-        return sendJSON(res, { message: 'Nume de utilizator sau parolă incorecte.' }, 400);
+        return sendJSON(res, { message: 'Nume de utilizator sau parolă incorecte.' }, 400); // More generic message
       }
 
       const token = jwt.sign(
-        { userId: user.id, role: user.role, username: user.username },
+        { userId: user.id, role: user.role },
         JWT_SECRET,
-        { expiresIn: '15m' }
+        { expiresIn: '15m' } // Token expiration added for security
       );
 
       return sendJSON(res, { message: 'Conectat cu succes!', token, role: user.role, username: user.username });
@@ -678,9 +650,18 @@ http.createServer(async (req, res) => {
   }
 
   // --- Protected API Endpoint (Example) ---
+  // This endpoint is not used by the provided frontend code but remains for demonstration.
   if (req.method === 'GET' && pathname === '/api/protected-info') {
-    return authenticateToken(req, res, async () => {
-      return sendJSON(res, { message: `Bine ai venit, ${req.user.username} (${req.user.role})! Ai accesat informații protejate. ID-ul tău: ${req.user.userId}.` });
+    return authenticateToken(req, res, async () => { // Changed to async to potentially fetch user details if needed
+      // User is authenticated, req.user contains { userId, role }
+      // If you need more user details here, you could fetch from DB:
+      // const userResult = await pool.query('SELECT username FROM users WHERE id = $1', [req.user.userId]);
+      // const username = userResult.rows[0]?.username || 'Unknown';
+      if (req.user.role === 'admin') {
+        return sendJSON(res, { message: `Bine ai venit, ${req.user.role}! Ai accesat informații protejate (admin). ID-ul tău: ${req.user.userId}.` });
+      } else {
+        return sendJSON(res, { message: `Bine ai venit, ${req.user.role}! Ai accesat informații protejate (user). ID-ul tău: ${req.user.userId}.` });
+      }
     });
   }
 
@@ -701,9 +682,11 @@ http.createServer(async (req, res) => {
         );
 
         if (result.rowCount > 0) {
+          // Increment a favorite count for the product (optional, for popularity)
+           // await pool.query('UPDATE products SET favorite_count = COALESCE(favorite_count, 0) + 1 WHERE id = $1', [productId]);
           return sendJSON(res, { message: 'Produs adăugat la favorite!', productId });
         } else {
-          return sendJSON(res, { message: 'Produsul este deja în favorite.' }, 409);
+          return sendJSON(res, { message: 'Produsul este deja în favorite.' }, 409); // Changed message
         }
       } catch (error) {
         console.error('Eroare la adăugarea la favorite:', error);
@@ -730,9 +713,11 @@ http.createServer(async (req, res) => {
         );
 
         if (result.rowCount > 0) {
+           // Decrement the favorite count (optional)
+           // await pool.query('UPDATE products SET favorite_count = GREATEST(0, COALESCE(favorite_count, 0) - 1) WHERE id = $1', [productId]);
           return sendJSON(res, { message: 'Produs eliminat din favorite!', productId });
         } else {
-          return sendJSON(res, { message: 'Produsul nu a fost găsit în favorite.' }, 404);
+          return sendJSON(res, { message: 'Produsul nu a fost găsit în favorite.' }, 404); // Changed message
         }
       } catch (error) {
         console.error('Eroare la eliminarea din favorite:', error);
@@ -752,9 +737,10 @@ http.createServer(async (req, res) => {
            FROM products p
            JOIN user_favorites uf ON p.id = uf.product_id
            WHERE uf.user_id = $1
-           ORDER BY uf.favorited_at DESC`,
+           ORDER BY uf.favorited_at DESC`, // Order by when it was favorited
           [userId]
         );
+         // Ensure features array is handled correctly
         const formattedRows = rows.map(row => ({
              ...row,
              features: Array.isArray(row.features) ? row.features : (typeof row.features === 'string' ? row.features.split(',').map(f => f.trim()).filter(f => f.length > 0) : [])
@@ -768,6 +754,8 @@ http.createServer(async (req, res) => {
   }
 
   // --- API Endpoint pentru a verifica dacă un produs este în favoritele utilizatorului ---
+  // This endpoint is not strictly needed with the /api/favorites endpoint that returns all favorites,
+  // but keeping it for completeness if a frontend might need it.
   if (req.method === 'GET' && pathname.startsWith('/api/favorites/check/')) {
     const productIdMatch = pathname.match(/\/api\/favorites\/check\/(\d+)$/);
     if (!productIdMatch) {
@@ -808,23 +796,20 @@ http.createServer(async (req, res) => {
           try {
               const scrapedData = await scrapeProductPage(productUrl);
 
-              if (!scrapedData || scrapedData.error) {
-                  return sendJSON(res, { message: scrapedData.error || 'Nu s-au putut extrage suficiente date de pe URL-ul furnizat. Verificați selectorii de scraping sau URL-ul.', details: scrapedData }, 400);
+              if (!scrapedData || !scrapedData.name || scrapedData.price === null) {
+                  return sendJSON(res, { message: 'Nu s-au putut extrage suficiente date de pe URL-ul furnizat. Verificați selectorii de scraping sau URL-ul.', details: scrapedData }, 400); // Include scraped data for debugging
               }
 
-              if (!scrapedData.name || scrapedData.price === null || scrapedData.price <= 0 || !scrapedData.type || scrapedData.features.length === 0) {
-                   console.warn('Scraping returned incomplete or invalid data:', scrapedData);
-                   return sendJSON(res, { message: 'Datele extrase din URL sunt incomplete (lipsesc nume, preț, tip sau caracteristici) sau invalide.', details: scrapedData }, 400);
-              }
-
+              // Verifică dacă un produs cu același link există deja pentru a evita duplicarea
               const existingProduct = await pool.query('SELECT id FROM products WHERE link = $1', [productUrl]);
               if (existingProduct.rows.length > 0) {
                   return sendJSON(res, { message: 'Acest produs (cu acest link) există deja în baza de date.', product: existingProduct.rows[0] }, 409);
               }
 
+              // Inseră produsul scrapuit în baza de date
               const result = await pool.query(
-                  'INSERT INTO products (name, price, batterylife, type, features, link, image) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, name',
-                  [scrapedData.name, scrapedData.price, scrapedData.batterylife, scrapedData.type.toLowerCase(), scrapedData.features, scrapedData.link, scrapedData.image]
+                  'INSERT INTO products (name, price, batterylife, type, features, link, image) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, name', // Added 'image'
+                  [scrapedData.name, scrapedData.price, scrapedData.batterylife, scrapedData.type.toLowerCase(), scrapedData.features, scrapedData.link, scrapedData.image] // Store type as lowercase
               );
 
               return sendJSON(res, { message: 'Produs scrapuit și adăugat cu succes!', product: result.rows[0] }, 201);

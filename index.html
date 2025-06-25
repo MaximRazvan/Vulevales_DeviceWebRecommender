@@ -64,7 +64,6 @@
         <label for="loginUsername">Nume utilizator:</label>
         <input type="text" id="loginUsername" name="username" required>
         <label for="loginPassword">Parola:</label>
-        <!-- MODIFICAT: Adaugat container pentru parola si buton -->
         <div class="password-container">
             <input type="password" id="loginPassword" name="password" required>
             <button type="button" class="toggle-password">Arată</button>
@@ -90,13 +89,11 @@
         <input type="email" id="registerEmail" name="email" required>
 
         <label for="registerPassword">Parola:</label>
-        <!-- MODIFICAT: Adaugat container pentru parola si buton -->
         <div class="password-container">
             <input type="password" id="registerPassword" name="password" required>
             <button type="button" class="toggle-password">Arată</button>
         </div>
 
-        <!-- MODIFICAT: Adaugat camp de confirmare parola -->
         <label for="registerConfirmPassword">Confirmare Parola:</label>
         <div class="password-container">
             <input type="password" id="registerConfirmPassword" name="confirm_password" required>
@@ -201,7 +198,7 @@
   <script>
     const recommendationsListSection = document.getElementById('recommendationsList');
     
-    // Referinte pentru butoane
+    //Referinte pentru butoane
     const userStatusButton = document.getElementById('userStatusButton');
     const viewStatsButton = document.getElementById('viewStatsButton');
     const viewDocsButton = document.getElementById('viewDocsButton'); 
@@ -353,20 +350,14 @@
       }
     }
 
-    // MODIFICAT: Implementarea tehnicii de "Debouncing" pentru căutare
     let debounceTimer;
     document.getElementById('searchInput').addEventListener('input', () => {
-        // Șterge timer-ul precedent dacă există. Astfel, funcția nu se execută
-        // dacă utilizatorul încă tastează.
-        clearTimeout(debounceTimer);
 
-        // Setează un nou timer. Funcția de căutare se va executa doar dacă
-        // au trecut 300ms de la ultima tastă apăsată.
+        clearTimeout(debounceTimer);
         debounceTimer = setTimeout(() => {
             fetchRecommendations(document.getElementById('searchInput').value);
         }, 300); 
     });
-    // SFÂRȘIT MODIFICARE
 
     document.querySelectorAll('#filters input[type="number"]').forEach(el => {
       el.addEventListener('input', function() {
@@ -384,7 +375,7 @@
      });
 
 
-    //   Logica Modalului de Login/Înregistrare  
+    //logica de login/inregistrare  
     const loginButton = document.getElementById('loginButton');
     const logoutButton = document.getElementById('logoutButton');
     const loginModal = document.getElementById('loginModal');
@@ -399,7 +390,6 @@
     const registerUsernameInput = document.getElementById('registerUsername');
     const registerEmailInput = document.getElementById('registerEmail'); 
     const registerPasswordInput = document.getElementById('registerPassword');
-    // MODIFICAT: Adaugat referinta la campul de confirmare
     const registerConfirmPasswordInput = document.getElementById('registerConfirmPassword');
     const registerStatusMessageDiv = document.getElementById('registerStatusMessage');
 
@@ -432,7 +422,6 @@
       registerUsernameInput.value = '';
       registerEmailInput.value = ''; 
       registerPasswordInput.value = '';
-      // MODIFICAT: Resetat si campul de confirmare
       registerConfirmPasswordInput.value = '';
     });
 
@@ -756,7 +745,7 @@
         }
     });
 
-    //   Logica Modalului de Editare Produs  
+    //Logica Modalului de Editare Produs  
     const editProductModal = document.getElementById('editProductModal');
     const closeEditProductButton = document.querySelector('.edit-product-close-button');
     const updateProductButton = document.getElementById('updateProduct');
@@ -962,36 +951,24 @@
     }
 
 
-    // --- Logică la încărcarea paginii ---
     function initializePage() {
-        // Această funcție va fi responsabilă pentru a pregăti pagina,
-        // inclusiv pentru a atașa event listeners și a încărca datele inițiale.
         updateAuthUI();
-
-        // MODIFICAT: Logica pentru butoanele de arata/ascunde parola
         document.querySelectorAll('.toggle-password').forEach(button => {
             button.addEventListener('click', () => {
                 const passwordInput = button.parentElement.querySelector('input');
                 const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
                 passwordInput.setAttribute('type', type);
                 
-                // Schimba textul butonului
                 button.textContent = type === 'password' ? 'Arată' : 'Ascunde';
             });
         });
     }
 
-    // Rulează la prima încărcare a paginii
     document.addEventListener('DOMContentLoaded', initializePage);
 
-    // Rulează de fiecare dată când pagina devine vizibilă,
-    // inclusiv la navigarea "back" dintr-o altă pagină.
     window.addEventListener('pageshow', function(event) {
-        // event.persisted este true dacă pagina a fost restaurată din bfcache.
         if (event.persisted) {
             console.log("Pagina a fost restaurată din cache. Se reîmprospătează datele.");
-            // Re-inițializăm starea UI și reîncărcăm datele
-            // pentru a ne asigura că totul este actualizat.
             updateAuthUI();
         }
     });

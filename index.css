@@ -6,14 +6,14 @@
   --neutral-light: #c0c0c0; /* pentru fundalul principal al paginii */
   --card-bg: #e0e0e0; /* pentru fundalul cardurilor, modalelor */
   --input-bg: #f0f0f0; /* pentru fundalul campurilor de input */
-  --text-dark: var(--neutral-dark); /* Alias pentru gri închis */
-  --text-light: #ffffff; /* text pe fundal întunecat */
+  --text-dark: var(--neutral-dark); /* alias pentru gri inchis */
+  --text-light: #ffffff; /* text pe fundal intunecat */
   --border-color: #a0a0a0; /* pentru borduri */
   --favorite-color-base: #FFB066; /* pentru butonul de favorite */
   --favorite-color-active: #FF9933; /* starea "favoritat" si hover */
 
-  --shadow-light: rgba(0, 0, 0, 0.08); /* Umbra usoara */
-  --shadow-medium: rgba(0, 0, 0, 0.15); /* Umbra medie */
+  --shadow-light: rgba(0, 0, 0, 0.08); /* umbra */
+  --shadow-medium: rgba(0, 0, 0, 0.15); /* umbra medie */
 }
 
 body {
@@ -80,14 +80,14 @@ header h1 {
     display: none;
 }
 
-/* MODIFICAT */
+
 .header-top-left-actions {
     position: absolute;
     top: 15px;
     left: 15px;
     z-index: 10;
     display: flex;
-    flex-direction: column; /* Așează butoanele pe verticală */
+    flex-direction: column; /* Aseaza butoanele pe verticala */
     gap: 10px;
 }
 
@@ -182,7 +182,7 @@ header h1 {
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
 }
 
-/* MODIFICAT */
+
 #viewDocsButton {
     background-color: var(--primary-color);
 }
@@ -276,7 +276,7 @@ h2 {
     letter-spacing: 0.05em;
 }
 
-/* Grid pentru Recomandări */
+/* Grid pentru Recomandari */
 #recommendations {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -524,7 +524,7 @@ h2 {
   box-shadow: 0 0 0 4px rgba(85, 85, 85, 0.3);
 }
 
-/* MODIFICAT: Stiluri pentru containerul parolei si butonul de toggle */
+
 .password-container {
     position: relative;
     display: flex;
@@ -555,7 +555,7 @@ h2 {
 .toggle-password:hover {
     color: var(--primary-color);
 }
-/* Sfarsit Modificari */
+
 
 
 .modal-buttons {
@@ -579,7 +579,7 @@ h2 {
   letter-spacing: 0.05em;
 }
 
-/* Stil specific pentru butonul Conectare si Butonul Update Produs (în afara modal-buttons, preia de aici default) */
+/* Stil pentru butonul Conectare si Butonul Update Produs */
 #loginSubmit, #updateProduct {
      background-color: var(--secondary-color);
 }
@@ -599,7 +599,7 @@ h2 {
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
 }
 
-/* Stil specific pentru butoanele de submit produs nou */
+
 #submitProduct {
      background-color: var(--primary-color);
 }
@@ -899,7 +899,7 @@ footer {
       right: 15px;
   }
 
-  /* Ajustare responsive si mai mica pentru boxul RSS */
+  
   .rss-box {
        padding: 0.8em 1em;
        margin: 0.8em auto;

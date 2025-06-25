@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title id="pageTitle">Detalii Produs - Recomandări Dispozitive Electronice</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto:wght@300;400;500&display=swap" rel="1">
   <style>
     /* Definire variabile CSS - Copiat din index.html pentru consistență */
     :root {
@@ -27,66 +27,66 @@
     }
 
     body {
-      font-family: 'Roboto', sans-serif;
+      font-family: 'Roboto', sans-serif; /* cite: 1 */
       margin: 0;
       padding: 0;
-      background-color: var(--neutral-light); /* Fundal gri mediu */
-      color: var(--text-dark); /* Text gri închis */
-      line-height: 1.6;
+      background-color: var(--neutral-light); /* cite: 1 */
+      color: var(--text-dark); /* cite: 1 */
+      line-height: 1.6; /* cite: 1 */
     }
 
     header { /* Copiat din index.html */
-      background-color: var(--neutral-dark); /* Fundal gri închis */
-      padding: 1.5em 1em;
-      color: var(--text-light); /* Text alb */
-      text-align: center;
-      position: relative;
-      box-shadow: 0 4px 10px var(--shadow-medium);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 1.5em;
+      background-color: var(--neutral-dark); /* cite: 1 */
+      padding: 1.5em 1em; /* cite: 1 */
+      color: var(--text-light); /* cite: 1 */
+      text-align: center; /* cite: 1 */
+      position: relative; /* cite: 1 */
+      box-shadow: 0 4px 10px var(--shadow-medium); /* cite: 1 */
+      display: flex; /* cite: 1 */
+      flex-direction: column; /* cite: 1 */
+      align-items: center; /* cite: 1 */
+      gap: 1.5em; /* cite: 1 */
     }
     header a { /* Stil specific pentru linkul din header */
-        color: inherit; /* Moștenește culoarea textului din header */
-        text-decoration: none; /* Fără subliniere */
+        color: inherit; /* cite: 1 */
+        text-decoration: none; /* cite: 1 */
     }
     header a:hover {
-         text-decoration: underline;
+         text-decoration: underline; /* cite: 1 */
     }
 
     header h1 { /* Copiat din index.html */
-        font-family: 'Poppins', sans-serif;
-        margin: 0;
-        font-size: 2.8em;
-        color: var(--primary-color); /* Titlu Portocaliu */
-        letter-spacing: -0.03em;
+        font-family: 'Poppins', sans-serif; /* cite: 1 */
+        margin: 0; /* cite: 1 */
+        font-size: 2.8em; /* cite: 1 */
+        color: var(--primary-color); /* Titlu Portocaliu */ /* cite: 1 */
+        letter-spacing: -0.03em; /* cite: 1 */
     }
 
     /* Conținut Principal */
     main {
-      padding: 3em 1.5em;
+      padding: 3em 1.5em; /* cite: 1 */
       max-width: 900px; /* Lățime adaptată pentru pagina de detalii */
-      margin: 0 auto;
+      margin: 0 auto; /* cite: 1 */
     }
 
     section {
-      margin-bottom: 3.5em;
+      margin-bottom: 3.5em; /* cite: 1 */
     }
 
      /* Secțiunea Detalii Produs */
     #productDetails {
-        background-color: var(--card-bg); /* Fundal gri deschis */
-        padding: 3em;
-        border-radius: 15px;
-        box-shadow: 0 6px 20px var(--shadow-light);
+        background-color: var(--card-bg); /* Fundal gri deschis */ /* cite: 1 */
+        padding: 3em; /* cite: 1 */
+        border-radius: 15px; /* cite: 1 */
+        box-shadow: 0 6px 20px var(--shadow-light); /* cite: 1 */
     }
 
     #productDetails h2 { /* Copiat din index.html */
-        color: var(--primary-color); /* Nume produs - Portocaliu */
-        margin-bottom: 0.5em; /* Spațiu redus pentru a face loc statisticilor */
-        font-size: 2.5em;
-        font-weight: 600;
+        color: var(--primary-color); /* Nume produs - Portocaliu */ /* cite: 1 */
+        margin-bottom: 0.5em; /* Spațiu redus pentru a face loc statisticilor */ /* cite: 1 */
+        font-size: 2.5em; /* cite: 1 */
+        font-weight: 600; /* cite: 1 */
         text-transform: capitalize;
         text-align: left; /* Aliniază titlul la stânga pe pagina de detalii */
         letter-spacing: normal;
@@ -115,7 +115,7 @@
     }
 
     #productDetails p {
-        margin-bottom: 1em;
+        margin-bottom: 1em; /* cite: 1 */
         line-height: 1.7;
         font-size: 1.15em;
         color: #444;
@@ -183,80 +183,370 @@
     }
 
     footer {
-      background-color: var(--neutral-dark);
-      color: var(--text-light);
-      text-align: center;
-      padding: 1.5em 1em;
-      box-shadow: 0 -4px 10px var(--shadow-medium);
-      font-size: 1.1em;
+      background-color: var(--neutral-dark); /* cite: 1 */
+      color: var(--text-light); /* cite: 1 */
+      text-align: center; /* cite: 1 */
+      padding: 1.5em 1em; /* cite: 1 */
+      box-shadow: 0 -4px 10px var(--shadow-medium); /* cite: 1 */
+      font-size: 1.1em; /* cite: 1 */
     }
 
     .rss-box {
-        background-color: var(--card-bg);
-        padding: 1em 2em;
-        border-radius: 10px;
-        box-shadow: 0 3px 10px var(--shadow-light);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        width: fit-content;
-        margin: 1.5em auto;
-        max-width: 90%;
-        text-align: center;
+        background-color: var(--card-bg); /* cite: 1 */
+        padding: 1em 2em; /* cite: 1 */
+        border-radius: 10px; /* cite: 1 */
+        box-shadow: 0 3px 10px var(--shadow-light); /* cite: 1 */
+        display: flex; /* cite: 1 */
+        justify-content: center; /* cite: 1 */
+        align-items: center; /* cite: 1 */
+        width: fit-content; /* cite: 1 */
+        margin: 1.5em auto; /* cite: 1 */
+        max-width: 90%; /* cite: 1 */
+        text-align: center; /* cite: 1 */
     }
 
     .rss-box a {
-        color: var(--primary-color);
-        text-decoration: none;
-        font-weight: 500;
-        transition: color 0.2s ease;
-        font-size: 1.1em;
+        color: var(--primary-color); /* cite: 1 */
+        text-decoration: none; /* cite: 1 */
+        font-weight: 500; /* cite: 1 */
+        transition: color 0.2s ease; /* cite: 1 */
+        font-size: 1.1em; /* cite: 1 */
     }
 
     .rss-box a:hover {
-        color: #E07B00;
-        text-decoration: underline;
+        color: #E07B00; /* cite: 1 */
+        text-decoration: underline; /* cite: 1 */
+    }
+
+    /* Stiluri pentru butoanele de acțiune din pagina de detalii */
+    .product-actions {
+        display: flex;
+        gap: 15px;
+        margin-top: 1.5em; /* Spațiu deasupra butoanelor */
+        margin-bottom: 2em; /* Spațiu sub butoane */
+        justify-content: flex-start; /* Aliniază butoanele la stânga */
+        flex-wrap: wrap; /* Permite wrap pe ecrane mici */
+    }
+
+    .action-btn {
+        padding: 12px 22px;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 1.05em;
+        font-weight: 600;
+        transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-light); /* Text alb pe butoane colorate */
+    }
+
+    .action-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .favorite-btn {
+        background-color: var(--favorite-color-base); /* Portocaliu deschis */
+        color: var(--text-dark); /* Text gri închis */
+    }
+
+    .favorite-btn.favorited {
+        background-color: var(--favorite-color-active); /* Portocaliu mediu */
+        color: var(--text-light); /* Text alb */
+    }
+
+    .favorite-btn:hover {
+        background-color: var(--favorite-color-active);
+    }
+
+    .edit-btn {
+        background-color: var(--secondary-color); /* Gri închis */
+    }
+
+    .edit-btn:hover {
+        background-color: #444444;
+    }
+
+    .delete-btn {
+        background-color: var(--accent-color); /* Roșu */
+    }
+
+    .delete-btn:hover {
+        background-color: #c82333;
+    }
+
+    /* Stiluri Modal (copiate din index.html) */
+    .modal {
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.6); /* Fundal semi-transparent întunecat */
+      display: none;
+      justify-content: center;
+      align-items: center;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .modal-content {
+      background-color: var(--card-bg); /* Fundal gri deschis */
+      padding: 35px;
+      border: none;
+      width: 90%;
+      max-width: 580px;
+      border-radius: 20px;
+      box-shadow: 0 10px 40px var(--shadow-medium);
+      position: relative;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    .close-button {
+      color: #999; /* Gri deschis */
+      font-size: 36px;
+      font-weight: bold;
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      cursor: pointer;
+      transition: color 0.2s ease;
+    }
+
+    .close-button:hover,
+    .close-button:focus {
+      color: var(--accent-color); /* Roșu la hover/focus */
+    }
+
+    .modal-content h2 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: var(--secondary-color); /* Titlu modal - Gri închis */
+      font-family: 'Poppins', sans-serif;
+      font-size: 2.3em;
+      font-weight: 600;
+    }
+
+    .modal-content form {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .modal-content label {
+      font-weight: 600;
+      color: #555; /* Gri închis */
+      margin-bottom: 5px;
+      font-size: 1.05em;
+    }
+
+    .modal-content input[type="text"],
+    .modal-content input[type="password"],
+    .modal-content input[type="number"],
+    .modal-content input[type="url"],
+    .modal-content select {
+      padding: 14px;
+      border: 1px solid var(--border-color); /* Bordură gri mediu */
+      border-radius: 12px;
+      font-size: 1.05em;
+      box-sizing: border-box;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+      background-color: var(--input-bg); /* Fundal gri foarte deschis */
+      color: var(--text-dark); /* Text gri închis */
+    }
+
+    .modal-content input[type="text"]:focus,
+    .modal-content input[type="password"]:focus,
+    .modal-content input[type="number"]:focus,
+    .modal-content input[type="url"]:focus,
+    .modal-content select:focus {
+      border-color: var(--secondary-color); /* Bordură focus gri închis */
+      outline: none;
+      box-shadow: 0 0 0 4px rgba(85, 85, 85, 0.3); /* Inel de focus (rgba din --secondary-color) */
+    }
+
+    .modal-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 30px;
+    }
+
+    .modal-buttons button {
+      color: var(--text-light); /* Text alb */
+      padding: 14px 30px;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      font-size: 1.1em;
+      font-weight: 600;
+      transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Stil specific pentru butonul Update Produs (în afara modal-buttons, preia de aici default) */
+    #updateProduct {
+         background-color: var(--secondary-color); /* Buton Conectare/Update - Gri închis */
+    }
+
+    #updateProduct:hover {
+        background-color: #444444; /* Nuanță mai închisă la hover */
+        transform: translateY(-3px);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Mesaje de status */
+    #editProductStatusMessage {
+      text-align: center;
+      margin-top: 20px;
+      font-weight: 600;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 1em;
+    }
+
+    #editProductStatusMessage.success {
+      color: #155724; /* Verde închis */
+      background-color: #d4edda; /* Verde deschis */
+      border: 1px solid #c3e6cb; /* Bordură verde */
+    }
+
+    #editProductStatusMessage.error {
+      color: #721c24; /* Roșu închis */
+      background-color: #f8d7da; /* Roșu deschis */
+      border: 1px solid #f5c6cb; /* Bordură roșie */
+    }
+
+    /* Animații */
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideIn {
+      from { transform: translateY(-50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
     }
 
     @media (max-width: 768px) {
-      header { padding: 1.5em 0.8em; gap: 1.2em; }
-      header h1 { font-size: 2.2em; }
+      header { padding: 1.5em 0.8em; gap: 1.2em; } /* cite: 1 */
+      header h1 { font-size: 2.2em; } /* cite: 1 */
       header a { display: block; width: fit-content; margin: 0.5em auto 0; }
-      main { padding: 2em 0.8em; }
-      #productDetails { padding: 2em; }
-      #productDetails h2 { font-size: 2em; text-align: center; }
-      #productDetails p { font-size: 1.05em; }
-      #backToRecommendations { padding: 12px 20px; font-size: 1em; }
-      .detail-product-image { max-width: 90%; }
+      main { padding: 2em 0.8em; } /* cite: 1 */
+      #productDetails { padding: 2em; } /* cite: 1 */
+      #productDetails h2 { font-size: 2em; text-align: center; } /* cite: 1 */
+      #productDetails p { font-size: 1.05em; } /* cite: 1 */
+      #backToRecommendations { padding: 12px 20px; font-size: 1em; } /* cite: 1 */
+      .detail-product-image { max-width: 90%; } /* cite: 1 */
       .product-stats { justify-content: center; } /* Center stats on mobile */
-      .rss-box { padding: 1em 1.5em; margin: 1em auto; }
-      footer { padding: 1em 0.8em; }
+      .rss-box { padding: 1em 1.5em; margin: 1em auto; } /* cite: 1 */
+      footer { padding: 1em 0.8em; } /* cite: 1 */
+
+      /* Media queries pentru butoane pe mobile */
+      .product-actions {
+          justify-content: center; /* Center buttons on mobile */
+          gap: 10px;
+          margin-top: 1em;
+          margin-bottom: 1.5em;
+      }
+      .action-btn {
+          padding: 10px 18px;
+          font-size: 0.95em;
+          border-radius: 20px;
+      }
+
+      .modal-content {
+        padding: 25px;
+        width: 95%;
+      }
+
+      .modal-content h2 {
+        font-size: 2em;
+      }
+
+      .modal-content input, .modal-content select {
+          padding: 10px;
+          font-size: 0.95em;
+          border-radius: 10px;
+      }
+      .modal-buttons {
+        flex-direction: column;
+        gap: 12px;
+      }
+      .modal-buttons button {
+          width: 100%;
+          padding: 12px 20px;
+          font-size: 1em;
+          border-radius: 12px;
+      }
     }
     @media (max-width: 480px) {
-        header h1 { font-size: 1.8em; }
-        #productDetails { padding: 1.5em; }
-        #productDetails h2 { font-size: 1.7em; }
-        #productDetails p { font-size: 0.95em; }
-        #backToRecommendations { padding: 10px 15px; font-size: 0.9em; }
-        .detail-product-image { max-width: 95%; }
+        header h1 { font-size: 1.8em; } /* cite: 1 */
+        #productDetails { padding: 1.5em; } /* cite: 1 */
+        #productDetails h2 { font-size: 1.7em; } /* cite: 1 */
+        #productDetails p { font-size: 0.95em; } /* cite: 1 */
+        #backToRecommendations { padding: 10px 15px; font-size: 0.9em; } /* cite: 1 */
+        .detail-product-image { max-width: 95%; } /* cite: 1 */
         .stat-item { padding: 6px 12px; font-size: 0.9em; }
-        .rss-box { padding: 0.8em 1em; margin: 0.8em auto; font-size: 0.9em; }
-        .rss-box a { font-size: 1em; }
-        footer { padding: 0.8em 0.5em; }
+        .rss-box { padding: 0.8em 1em; margin: 0.8em auto; font-size: 0.9em; } /* cite: 1 */
+        .rss-box a { font-size: 1em; } /* cite: 1 */
+        footer { padding: 0.8em 0.5em; } /* cite: 1 */
+
+        .product-actions {
+            flex-direction: column; /* Stack buttons vertically on very small screens */
+            align-items: center;
+            gap: 8px;
+        }
+        .action-btn {
+            width: 90%; /* Make buttons full width */
+            padding: 10px 15px;
+            font-size: 0.9em;
+        }
+        .modal-content {
+            padding: 18px;
+        }
+        .modal-content h2 {
+            font-size: 1.7em;
+        }
+        .modal-content input, .modal-content select {
+            padding: 10px;
+            font-size: 0.95em;
+            border-radius: 10px;
+        }
+        .modal-buttons button {
+            padding: 10px 15px;
+            font-size: 0.95em;
+            border-radius: 12px;
+        }
+        .close-button {
+            font-size: 30px;
+            top: 10px;
+            right: 15px;
+        }
     }
   </style>
 </head>
 <body>
   <header>
-     <a href="/"> <h1>Recomandări Dispozitive Electronice</h1>
+     <a href="/">
+        <h1>Recomandări Dispozitive Electronice</h1>
      </a>
   </header>
 
   <main>
     <section id="productDetails">
       <button id="backToRecommendations">Înapoi la Recomandări</button>
+      <div class="product-actions">
+          <button id="favoriteButton" class="action-btn favorite-btn" style="display: none;">Adaugă la Favorite</button>
+          <button id="editProductButton" class="action-btn edit-btn" style="display: none;">Editează Produs</button>
+          <button id="deleteProductButton" class="action-btn delete-btn" style="display: none;">Șterge Produs</button>
+      </div>
       <h2 id="productName">Încărcare...</h2>
-      <!-- The content below this will be generated by JavaScript -->
       <p class="loading-message">Se încarcă detaliile produsului...</p>
     </section>
   </main>
@@ -267,16 +557,284 @@
     </div>
   </footer>
 
+  <div id="editProductModal" class="modal">
+      <div class="modal-content">
+          <span class="close-button edit-product-close-button">×</span>
+          <h2>Editează Produs</h2>
+          <form id="editProductForm">
+              <input type="hidden" id="editProductId">
+
+              <label for="editProductNameInput">Nume Produs:</label>
+              <input type="text" id="editProductNameInput" required>
+
+              <label for="editProductPriceInput">Preț:</label>
+              <input type="number" id="editProductPriceInput" step="0.01" required min="0">
+
+              <label for="editProductBatteryLifeInput">Autonomie Baterie (ore):</label>
+              <input type="number" id="editProductBatteryLifeInput" min="0">
+
+              <label for="editProductTypeInput">Tip Produs:</label>
+              <select id="editProductTypeInput" required>
+                  <option value="">Selectează un tip</option>
+                  <option value="telefon">Telefon</option>
+                  <option value="tableta">Tabletă</option>
+                  <option value="ceas">Ceas</option>
+                  <option value="drona">Dronă</option>
+                  <option value="laptop">Laptop</option>
+                  <option value="casti">Căști</option>
+              </select>
+
+              <label for="editProductFeaturesInput">Caracteristici (separate prin virgulă):</label>
+              <input type="text" id="editProductFeaturesInput" placeholder="Ex: 5G, iOS, Face ID" required>
+
+              <label for="editProductLinkInput">Link Produs (opțional):</label>
+              <input type="url" id="editProductLinkInput" placeholder="Ex: https://exemplu.com/produs">
+
+              <label for="editProductImageInput">URL Imagine Produs (opțional):</label>
+              <input type="url" id="editProductImageInput" placeholder="Ex: https://exemplu.com/imagine.jpg">
+
+              <div class="modal-buttons">
+                  <button type="submit" id="updateProduct">Actualizează Produs</button>
+              </div>
+          </form>
+          <div id="editProductStatusMessage"></div>
+      </div>
+  </div>
+
+
   <script>
     const productDetailsSection = document.getElementById('productDetails');
     const backToRecommendationsButton = document.getElementById('backToRecommendations');
     const productNameElement = document.getElementById('productName');
     const loadingMessageElement = productDetailsSection.querySelector('.loading-message');
 
-    // Function to display single product details
+    // NOU: Referințe la butoanele de acțiune
+    const favoriteButton = document.getElementById('favoriteButton');
+    const editProductButton = document.getElementById('editProductButton');
+    const deleteProductButton = document.getElementById('deleteProductButton');
+    let currentProductId = null; // Pentru a stoca ID-ul produsului curent
+
+    // NOU: Referințe pentru modalul de editare (copiate din index.html)
+    const editProductModal = document.getElementById('editProductModal');
+    const closeEditProductButton = document.querySelector('.edit-product-close-button');
+    const updateProductButton = document.getElementById('updateProduct');
+    const editProductIdInput = document.getElementById('editProductId');
+    const editProductNameInput = document.getElementById('editProductNameInput');
+    const editProductPriceInput = document.getElementById('editProductPriceInput');
+    const editProductBatteryLifeInput = document.getElementById('editProductBatteryLifeInput');
+    const editProductTypeInput = document.getElementById('editProductTypeInput');
+    const editProductFeaturesInput = document.getElementById('editProductFeaturesInput');
+    const editProductLinkInput = document.getElementById('editProductLinkInput');
+    const editProductImageInput = document.getElementById('editProductImageInput');
+    const editProductStatusMessageDiv = document.getElementById('editProductStatusMessage');
+
+    // Funcție pentru decodarea JWT (copiată din index.html)
+    function decodeJwt(token) {
+        try {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            return JSON.parse(jsonPayload);
+        } catch (e) {
+            console.error("Failed to decode JWT:", e);
+            return null;
+        }
+    }
+
+    // NOU: Funcție pentru a actualiza vizibilitatea butoanelor și starea butonului de favorite
+    async function updateUIForUserRoleAndFavorites(productId) {
+        const token = localStorage.getItem('token');
+        const userRole = localStorage.getItem('userRole');
+
+        favoriteButton.style.display = 'none';
+        editProductButton.style.display = 'none';
+        deleteProductButton.style.display = 'none';
+
+        if (token) {
+            // Afișează butonul de favorite și verifică starea
+            favoriteButton.style.display = 'block';
+            const isFavorited = await checkFavoriteStatus(productId);
+            if (isFavorited) {
+                favoriteButton.textContent = 'Elimină din Favorite';
+                favoriteButton.classList.add('favorited');
+            } else {
+                favoriteButton.textContent = 'Adaugă la Favorite';
+                favoriteButton.classList.remove('favorited');
+            }
+
+            if (userRole === 'admin') {
+                editProductButton.style.display = 'block';
+                deleteProductButton.style.display = 'block';
+            }
+        }
+    }
+
+    // NOU: Funcții pentru Favorite (copiate din index.html)
+    async function checkFavoriteStatus(productId) {
+        const token = localStorage.getItem('token');
+        if (!token) return false;
+        try {
+            const res = await fetch(`/api/favorites/check/${productId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                return data.isFavorited;
+            }
+            return false;
+        } catch (error) {
+            console.error('Eroare la verificare stare favorite:', error);
+            return false;
+        }
+    }
+
+    async function addToFavorites(productId) {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert('Trebuie să fii autentificat pentru a adăuga produse la favorite.');
+            return false; // Return false on failure
+        }
+        try {
+            const response = await fetch('/api/favorites', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ productId })
+            });
+            const data = await response.json();
+            if (response.ok) {
+                // alert(data.message); // Nu afișăm alertă pentru o experiență mai fluidă
+                return true; // Return true on success
+            } else {
+                alert(data.message || 'Eroare la adăugarea la favorite.');
+                return false;
+            }
+        } catch (error) {
+            console.error('Eroare la adăugarea la favorite:', error);
+            alert('A apărut o eroare de rețea la adăugarea la favorite.');
+            return false;
+        }
+    }
+
+    async function removeFromFavorites(productId) {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert('Trebuie să fii autentificat pentru a elimina produse din favorite.');
+            return false; // Return false on failure
+        }
+        try {
+            const response = await fetch(`/api/favorites/${productId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            const data = await response.json();
+            if (response.ok) {
+                // alert(data.message); // Nu afișăm alertă
+                return true; // Return true on success
+            } else {
+                alert(data.message || 'Eroare la eliminarea din favorite.');
+                return false;
+            }
+        } catch (error) {
+            console.error('Eroare la eliminarea din favorite:', error);
+            alert('A apărut o eroare de rețea la eliminarea din favorite.');
+            return false;
+        }
+    }
+
+    // NOU: Funcții pentru Editare/Ștergere (copiate și adaptate din index.html)
+    function showEditProductStatusMessage(message, type) {
+        editProductStatusMessageDiv.textContent = message;
+        editProductStatusMessageDiv.className = type;
+    }
+
+    async function openEditProductModal(productId) {
+        editProductStatusMessageDiv.textContent = '';
+        editProductStatusMessageDiv.className = '';
+
+        try {
+            const userRole = localStorage.getItem('userRole');
+            const token = localStorage.getItem('token');
+            if (userRole !== 'admin' || !token) {
+                 alert('Nu aveți permisiunea de a edita produse.');
+                 return;
+            }
+
+            const res = await fetch(`/api/products/${productId}`, {
+                 headers: {
+                    'Authorization': `Bearer ${token}`
+                 }
+            });
+            const product = await res.json();
+
+            if (res.ok) {
+                editProductIdInput.value = product.id;
+                editProductNameInput.value = product.name;
+                editProductPriceInput.value = product.price;
+                editProductBatteryLifeInput.value = product.batterylife || '';
+                editProductTypeInput.value = product.type;
+                editProductFeaturesInput.value = product.features.join(', ');
+                editProductLinkInput.value = product.link && product.link !== 'null' ? product.link : '';
+                editProductImageInput.value = product.image && product.image !== 'null' ? product.image : '';
+
+                editProductModal.style.display = 'flex';
+            } else {
+                showEditProductStatusMessage(product.message || `Eroare la preluarea datelor produsului (Status: ${res.status}).`, 'error');
+                 editProductModal.style.display = 'none';
+            }
+        } catch (error) {
+            console.error('Error fetching product for edit:', error);
+            showEditProductStatusMessage('A apărut o eroare la încărcarea datelor produsului pentru editare. Verificați conexiunea și autentificarea.', 'error');
+             editProductModal.style.display = 'none';
+        }
+    }
+
+    async function deleteProduct(productId) {
+        const token = localStorage.getItem('token');
+        const userRole = localStorage.getItem('userRole');
+
+        if (userRole !== 'admin' || !token) {
+            alert('Nu aveți permisiunea de a șterge produse. Vă rugăm să vă conectați ca administrator.');
+            return;
+        }
+
+        if (!confirm('Ești sigur că vrei să ștergi acest produs? Această acțiune este ireversibilă!')) {
+             return;
+        }
+
+        try {
+            const response = await fetch(`/api/products/${productId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                alert(data.message);
+                window.location.href = '/'; // Redirecționează înapoi la pagina principală după ștergere
+            } else {
+                alert(data.message || `Eroare la ștergerea produsului (Status: ${response.status}).`);
+            }
+        } catch (error) {
+            console.error('Eroare la ștergerea produsului:', error);
+            alert('A apărut o eroare la ștergerea produsului. Verificați conexiunea și autentificarea.');
+        }
+    }
+
+
+    // Funcție pentru a afișa detaliile produsului
     async function displayProductDetails(productId) {
-        productNameElement.textContent = 'Încărcare...'; // Reset title
-        loadingMessageElement.style.display = 'block'; // Show loading message
+        productNameElement.textContent = 'Încărcare...';
+        loadingMessageElement.style.display = 'block';
         // Clear previous details (except back button and title placeholder)
         const existingDetails = productDetailsSection.querySelectorAll('p:not(.loading-message), a, img, .product-stats');
         existingDetails.forEach(el => el.remove());
@@ -286,11 +844,16 @@
             const res = await fetch(`/api/products/${productId}`);
             const product = await res.json();
 
-            loadingMessageElement.style.display = 'none'; // Hide loading message
+            loadingMessageElement.style.display = 'none';
 
             if (res.ok) {
                 document.getElementById('pageTitle').textContent = `${product.name} - Recomandări Dispozitive Electronice`;
                 productNameElement.textContent = product.name;
+
+                // Set currentProductId after successful fetch
+                currentProductId = productId;
+                // Update UI for action buttons based on user role and favorite status
+                await updateUIForUserRoleAndFavorites(productId);
 
                 // NOU: Creează și adaugă containerul pentru statistici
                 const statsContainer = document.createElement('div');
@@ -381,6 +944,97 @@
         window.location.href = '/'; // Navigate back to the homepage
     });
 
+    // NOU: Event listeners pentru butoanele de acțiune
+    favoriteButton.addEventListener('click', async () => {
+        if (!currentProductId) return;
+        const isFavorited = favoriteButton.classList.contains('favorited');
+        let success;
+        if (isFavorited) {
+            success = await removeFromFavorites(currentProductId);
+        } else {
+            success = await addToFavorites(currentProductId);
+        }
+        if (success) {
+            await updateUIForUserRoleAndFavorites(currentProductId); // Reîmprospătează starea butonului
+        }
+    });
+
+    editProductButton.addEventListener('click', () => {
+        if (currentProductId) {
+            openEditProductModal(currentProductId);
+        }
+    });
+
+    deleteProductButton.addEventListener('click', () => {
+        if (currentProductId) {
+            deleteProduct(currentProductId);
+        }
+    });
+
+    // NOU: Event listeners pentru modalul de editare (similar cu index.html)
+    closeEditProductButton.addEventListener('click', () => {
+      editProductModal.style.display = 'none';
+    });
+
+    window.addEventListener('click', (event) => {
+      if (event.target == editProductModal) {
+        editProductModal.style.display = 'none';
+      }
+    });
+
+    updateProductButton.addEventListener('click', async (event) => {
+        event.preventDefault();
+
+        const productId = editProductIdInput.value;
+        const name = editProductNameInput.value.trim();
+        const price = parseFloat(editProductPriceInput.value);
+        const batteryLife = editProductBatteryLifeInput.value ? parseInt(editProductBatteryLifeInput.value, 10) : null;
+        const type = editProductTypeInput.value;
+        const features = editProductFeaturesInput.value.split(',').map(f => f.trim()).filter(f => f.length > 0);
+        const link = editProductLinkInput.value.trim();
+        const image = editProductImageInput.value.trim();
+
+         if (!productId || !name || isNaN(price) || price <= 0 || !type || features.length === 0) {
+            showEditProductStatusMessage('Vă rugăm să completați toate câmpurile obligatorii: Nume, Preț valid (>0), Tip și cel puțin o Caracteristică.', 'error');
+            return;
+        }
+
+        const token = localStorage.getItem('token');
+        if (!token) {
+            showEditProductStatusMessage('Nu sunteți autentificat. Vă rugăm să vă conectați ca administrator.', 'error');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/products/${productId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ name, price, batteryLife, type, features, link, image })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                showEditProductStatusMessage(data.message, 'success');
+                // Reîncărcăm detaliile produsului pentru a reflecta modificările
+                await displayProductDetails(currentProductId);
+                // Nu mai este necesar updateUIForUserRoleAndFavorites aici, displayProductDetails o apelează
+                setTimeout(() => {
+                    editProductModal.style.display = 'none';
+                }, 1500);
+            } else {
+                showEditProductStatusMessage(data.message || `Eroare la actualizarea produsului (Status: ${response.status}).`, 'error');
+            }
+        } catch (error) {
+            console.error('Eroare la actualizarea produsului:', error);
+            showEditProductStatusMessage('A apărut o eroare la trimiterea datelor de actualizare. Verificați conexiunea și autentificarea.', 'error');
+        }
+    });
+
+
     // --- Logică la încărcarea paginii de detalii ---
     function handleProductDetailsPageLoad() {
         const urlParams = new URLSearchParams(window.location.search);
@@ -400,7 +1054,7 @@
     }
 
     // Execută logica la încărcarea paginii de detalii
-    handleProductDetailsPageLoad();
+    document.addEventListener('DOMContentLoaded', handleProductDetailsPageLoad);
   </script>
 </body>
 </html>

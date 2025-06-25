@@ -353,9 +353,20 @@
       }
     }
 
+    // MODIFICAT: Implementarea tehnicii de "Debouncing" pentru căutare
+    let debounceTimer;
     document.getElementById('searchInput').addEventListener('input', () => {
-      fetchRecommendations(document.getElementById('searchInput').value);
+        // Șterge timer-ul precedent dacă există. Astfel, funcția nu se execută
+        // dacă utilizatorul încă tastează.
+        clearTimeout(debounceTimer);
+
+        // Setează un nou timer. Funcția de căutare se va executa doar dacă
+        // au trecut 300ms de la ultima tastă apăsată.
+        debounceTimer = setTimeout(() => {
+            fetchRecommendations(document.getElementById('searchInput').value);
+        }, 300); 
     });
+    // SFÂRȘIT MODIFICARE
 
     document.querySelectorAll('#filters input[type="number"]').forEach(el => {
       el.addEventListener('input', function() {

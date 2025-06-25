@@ -22,11 +22,11 @@
     </div>
 
     <div class="header-actions">
-        <button id="addProductButton" style="display: none;">Adauga Produs</button>
+        <button id="addProductButton" style="display: none;">Adaugă Produs</button>
         <button id="viewFavoritesButton" style="display: none;">Favoritele mele</button>
         <button id="loginButton">Conectare/Înregistrare</button>
         </div>
-    <input type="text" id="searchInput" placeholder="Cauta dupa model sau caracteristici...">
+    <input type="text" id="searchInput" placeholder="Caută dupa model sau caracteristici...">
     <div id="filters">
       <input type="number" id="minPrice" placeholder="Preț minim" min="0">
       <input type="number" id="maxPrice" placeholder="Preț maxim" min="0">
@@ -92,7 +92,7 @@
     <div id="addProductModal" class="modal">
     <div class="modal-content">
       <span class="close-button add-product-close-button">×</span>
-      <h2>Adauga Produs Nou</h2>
+      <h2>Adaugă Produs Nou</h2>
       <form id="productForm">
         <label for="productNameInput">Nume Produs:</label>
         <input type="text" id="productNameInput" required>
@@ -124,7 +124,7 @@
         <input type="url" id="productImageInput" placeholder="Ex: https://exemplu.com/imagine.jpg">
 
         <div class="modal-buttons">
-          <button type="submit" id="submitProduct">Adauga Produs</button>
+          <button type="submit" id="submitProduct">Adaugă Produs</button>
         </div>
       </form>
       <div id="addProductStatusMessage" class="status-message"></div>
@@ -260,7 +260,7 @@
                 });
 
                 const deleteButton = document.createElement('button');
-                deleteButton.textContent = 'sterge';
+                deleteButton.textContent = 'Șterge';
                 deleteButton.className = 'delete-btn';
                 deleteButton.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -274,7 +274,7 @@
 
             if (token) {
                 const favoriteButton = document.createElement('button');
-                favoriteButton.textContent = device.isFavorited ? 'Elimina din Favorite' : 'Adauga la Favorite';
+                favoriteButton.textContent = device.isFavorited ? 'Elimină din Favorite' : 'Adaugă la Favorite';
                 favoriteButton.className = 'favorite-btn';
                 if (device.isFavorited) {
                     favoriteButton.classList.add('favorited');
@@ -701,10 +701,10 @@
                     addProductModal.style.display = 'none';
                 }, 1500);
             } else {
-                showAddProductStatusMessage(data.message || 'Eroare la adaugarea produsului.', 'error');
+                showAddProductStatusMessage(data.message || 'Eroare la adăugarea produsului.', 'error');
             }
         } catch (error) {
-            console.error('Eroare la adaugarea produsului:', error);
+            console.error('Eroare la adăugarea produsului:', error);
             showAddProductStatusMessage('A aparut o eroare la trimiterea datelor. Va rugam sa încercati din nou.', 'error');
         }
     });
@@ -834,7 +834,7 @@
         const userRole = localStorage.getItem('userRole');
 
         if (userRole !== 'admin' || !token) {
-            alert('Nu aveti permisiunea de a sterge produse. Va rugam sa va conectati ca administrator.');
+            alert('Nu aveti permisiunea de a șterge produse. Va rugam sa va conectati ca administrator.');
             return;
         }
 
@@ -856,18 +856,18 @@
                 alert(data.message);
                 updateAuthUI();
             } else {
-                alert(data.message || `Eroare la stergerea produsului (Status: ${response.status}).`);
+                alert(data.message || `Eroare la ștergerea produsului (Status: ${response.status}).`);
             }
         } catch (error) {
-            console.error('Eroare la stergerea produsului:', error);
-            alert('A parut o eroare la stergerea produsului. Verificati conexiunea si autentificarea.');
+            console.error('Eroare la ștergerea produsului:', error);
+            alert('A parut o eroare la ștergerea produsului. Verificati conexiunea si autentificarea.');
         }
     }
 
     async function addToFavorites(productId) {
         const token = localStorage.getItem('token');
         if (!token) {
-            alert('Trebuie sa fii autentificat pentru a adauga produse la favorite.');
+            alert('Trebuie sa fii autentificat pentru a adaugă produse la favorite.');
             return;
         }
         try {
@@ -882,18 +882,18 @@
             const data = await response.json();
             if (response.ok) {
             } else {
-                alert(data.message || 'Eroare la adaugarea la favorite.');
+                alert(data.message || 'Eroare la adăugarea la favorite.');
             }
         } catch (error) {
-            console.error('Eroare la adaugarea la favorite:', error);
-            alert('A parut o eroare de retea la adaugarea la favorite.');
+            console.error('Eroare la adăugarea la favorite:', error);
+            alert('A parut o eroare de retea la adăugarea la favorite.');
         }
     }
 
     async function removeFromFavorites(productId) {
         const token = localStorage.getItem('token');
         if (!token) {
-            alert('Trebuie sa fii autentificat pentru a elimina produse din favorite.');
+            alert('Trebuie sa fii autentificat pentru a elimină produse din favorite.');
             return;
         }
         try {

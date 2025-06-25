@@ -84,7 +84,7 @@
                 actionsDiv.className = 'device-actions';
 
                 const removeFavoriteButton = document.createElement('button');
-                removeFavoriteButton.textContent = 'Elimina din Favorite';
+                removeFavoriteButton.textContent = 'Elimină din Favorite';
                 removeFavoriteButton.className = 'remove-favorite-btn';
                 removeFavoriteButton.addEventListener('click', async (e) => {
                     e.stopPropagation();
@@ -142,7 +142,7 @@
     async function removeFromFavorites(productId) {
         const token = localStorage.getItem('token');
         if (!token) {
-            alert('Trebuie sa fii autentificat pentru a elimina produse din favorite.');
+            alert('Trebuie sa fii autentificat pentru a elimină produse din favorite.');
             return;
         }
         try {

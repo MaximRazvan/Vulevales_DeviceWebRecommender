@@ -15,32 +15,31 @@ const PORT = 3000;
 // NU este cheia Anon sau Service Role de la Supabase pentru API, nici parola bazei de date.
 const JWT_SECRET = process.env.JWT_SECRET || 'your_super_secret_jwt_key_12345';
 
-// --- Supabase PostgreSQL Database Configuration ---
+// --- AWS RDS PostgreSQL Database Configuration ---
 const pool = new Pool({
   // !!! IMPORTANT !!!
-  // Înlocuiește aceste valori cu credențialele REALE ALE BAZEI DE DATE de la Supabase.
-  // Acestea le găsești în dashboard-ul Supabase, secțiunea:
-  // Project Settings -> Database -> Connection string -> Node.js
-  // Cheia 'anon' pe care ai furnizat-o NU este parola bazei de date.
+  // Aceste valori au fost actualizate pe baza imaginii tale.
+  // Asigură-te că parola este corectă!
 
-  user: 'postgres', // De obicei este 'postgres'
-  host: 'postgres.cluster-ctck2644kzwq.eu-north-1.rds.amazonaws.com', // <--- FOLOSIM HOST-UL SPECIFICAT
-  database: 'postgres123', // De obicei este 'postgres'
-  password: 'Postgres123.', // <--- !!! ÎNLOCUIEȘTE ACEASTA CU PAROLA TA REALĂ A BAZEI DE DATE SUPABASE !!!
-  port: 5432, // Default PostgreSQL port
+  user: 'postgres', // <--- PRELUAT DIN IMAGINE
+  host: 'postgres123.ctck2644kzwq.eu-north-1.rds.amazonaws.com', // <--- PRELUAT DIN IMAGINE
+  database: 'postgres', // <--- PRELUAT DIN IMAGINE
+  password: 'PAROLA_TA_SECRETA_AWS_RDS', // <--- !!! ÎNLOCUIEȘTE AICI CU PAROLA TA REALĂ DE LA AWS RDS !!!
+  port: 5432, // <--- PRELUAT DIN IMAGINE
 
-  // Supabase necesită conexiune SSL
+  // Majoritatea conexiunilor la AWS RDS necesită SSL
   ssl: {
-      rejectUnauthorized: false // Setează true în producție dacă ai certificat, false pentru dezvoltare
+      rejectUnauthorized: false // Setează true în producție dacă ai certificat, false pentru dezvoltare/simplitate
   }
 });
+
 
 // Test database connection
 pool.connect((err, client, done) => {
   if (err) {
     console.error('Database connection failed:', err.stack);
   } else {
-    console.log('Successfully connected to the Supabase PostgreSQL database.');
+    console.log('Successfully connected to the AWS RDS PostgreSQL database.');
     client.release();
   }
 });

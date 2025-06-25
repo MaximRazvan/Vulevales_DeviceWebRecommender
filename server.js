@@ -24,7 +24,7 @@ const pool = new Pool({
   user: 'postgres', // <--- PRELUAT DIN IMAGINE
   host: 'postgres123.ctck2644kzwq.eu-north-1.rds.amazonaws.com', // <--- PRELUAT DIN IMAGINE
   database: 'postgres', // <--- PRELUAT DIN IMAGINE
-  password: 'PAROLA_TA_SECRETA_AWS_RDS', // <--- !!! ÎNLOCUIEȘTE AICI CU PAROLA TA REALĂ DE LA AWS RDS !!!
+  password: 'Postgres123.', // <--- !!! ÎNLOCUIEȘTE AICI CU PAROLA TA REALĂ DE LA AWS RDS !!!
   port: 5432, // <--- PRELUAT DIN IMAGINE
 
   // Majoritatea conexiunilor la AWS RDS necesită SSL

@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Recomandări Dispozitive Electronice</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+  
   <style>
     /* Definire variabile CSS pentru culori și umbre pentru consistență și ușurință în modificare */
     :root {
@@ -64,7 +65,7 @@
         letter-spacing: -0.03em; /* Spațiere ușor mai strânsă a literelor */ /* cite: 2 */
     }
 
-    /* Container NOU pentru status utilizator și buton logout în colțul dreapta sus */
+    /* Container pentru status utilizator și buton logout în colțul dreapta sus */
     .header-top-right-status {
         position: absolute;
         top: 15px; /* Ajustează distanța de sus */
@@ -75,7 +76,7 @@
         z-index: 10; /* Asigură că este deasupra altor elemente */
     }
 
-    /* Stil NOU pentru butonul care afișează numele și rolul utilizatorului */
+    /* Stil pentru butonul care afișează numele și rolul utilizatorului */
     #userStatusButton {
         background-color: var(--primary-color); /* Fundal Portocaliu */
         color: var(--text-light); /* Text Alb */
@@ -92,6 +93,14 @@
         display: none; /* Ascuns implicit, controlat de JS */
     }
 
+    /* NEW: Container for top-left buttons */
+    .header-top-left-actions {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        z-index: 10;
+    }
+
 
     /* Container vechi pentru butoanele generale (modificat) */
     .header-actions {
@@ -106,7 +115,7 @@
 
     /* #authStatus nu mai este necesar, eliminat */
 
-    #loginButton, #logoutButton, #addProductButton, #viewFavoritesButton {
+    #loginButton, #logoutButton, #addProductButton, #viewFavoritesButton, #viewStatsButton {
       padding: 12px 22px; /* Padding generos */ /* cite: 2 */
       border: none; /* cite: 2 */
       border-radius: 25px; /* Butoane rotunde tip "pastilă" */ /* cite: 2 */
@@ -175,6 +184,17 @@
         background-color: var(--favorite-color-active); /* Portocaliu mediu la hover */ /* cite: 2 */
         transform: translateY(-3px); /* cite: 2 */
         box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3); /* cite: 2 */
+    }
+
+    #viewStatsButton { /* Style for the View Stats button */
+        background-color: var(--accent-color); /* Make it red */
+        color: var(--text-light);
+    }
+
+    #viewStatsButton:hover {
+        background-color: #c82333; /* Darker red on hover */
+        transform: translateY(-3px);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
     }
 
 
@@ -417,40 +437,6 @@
         color: var(--accent-color); /* Roșu pentru erori */ /* cite: 2 */
      }
 
-    /* Statistici Populare */
-    #popularList {
-        list-style: none; /* cite: 2 */
-        padding: 0; /* cite: 2 */
-        display: grid; /* cite: 2 */
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Grid responsiv */ /* cite: 2 */
-        gap: 1em; /* cite: 2 */
-    }
-
-    #popularList li {
-        background-color: var(--card-bg); /* Fundal gri deschis */ /* cite: 2 */
-        padding: 1em 1.5em; /* cite: 2 */
-        border-radius: 10px; /* cite: 2 */
-        box-shadow: 0 3px 10px var(--shadow-light); /* cite: 2 */
-        font-size: 1.1em; /* cite: 2 */
-        color: #444; /* Text gri mediu */ /* cite: 2 */
-        transition: transform 0.2s ease, box-shadow 0.2s ease; /* cite: 2 */
-    }
-
-    #popularList li:hover {
-        transform: translateY(-3px); /* cite: 2 */
-        box-shadow: 0 5px 15px var(--shadow-medium); /* cite: 2 */
-    }
-
-    /* Stil pentru mesajul informativ sub statistici */
-    #popularStatsInfo {
-        text-align: center; /* cite: 2 */
-        font-style: italic; /* cite: 2 */
-        color: #666; /* Gri mediu */ /* cite: 2 */
-        margin-top: 1em; /* cite: 2 */
-        font-size: 1em; /* cite: 2 */
-    }
-
-
     /* Stiluri Modal */
     .modal {
       position: fixed; /* cite: 2 */
@@ -633,7 +619,7 @@
 
     /* Design Responsiv */
     @media (max-width: 992px) {
-        #recommendations, #popularList {
+        #recommendations {
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* cite: 2 */
         }
     }
@@ -664,6 +650,21 @@
            font-size: 0.95em; /* Smaller font */
            border-radius: 18px; /* Adjusted rounding */
        }
+
+       /* NEW: Responsive for top-left actions */
+       .header-top-left-actions {
+           position: static;
+           width: 100%;
+           text-align: center;
+           margin-bottom: 0.8em; /* Space between this button and header-actions */
+       }
+       .header-top-left-actions button {
+           width: 100%;
+           padding: 10px 15px;
+           font-size: 0.95em;
+           border-radius: 18px;
+       }
+
 
       .header-actions {
           flex-direction: column; /* cite: 2 */
@@ -698,7 +699,7 @@
         margin-bottom: 1.8em; /* cite: 2 */
       }
 
-      #recommendations, #popularList {
+      #recommendations {
         grid-template-columns: 1fr; /* cite: 2 */
       }
 
@@ -782,6 +783,13 @@
            border-radius: 15px;
        }
 
+       /* NEW: Responsive for top-left actions on smaller screens */
+       .header-top-left-actions button {
+           padding: 8px 12px;
+           font-size: 0.9em;
+           border-radius: 15px;
+       }
+
       #searchInput {
           padding: 0.7em 1em; /* cite: 2 */
           font-size: 0.9em; /* cite: 2 */
@@ -823,7 +831,7 @@
           font-size: 0.95em; /* cite: 2 */
           border-radius: 10px; /* cite: 2 */
       }
-      .modal-buttons button {
+      .modal-buttons {
           padding: 10px 15px; /* cite: 2 */
           font-size: 0.95em; /* cite: 2 */
           border-radius: 12px; /* cite: 2 */
@@ -894,6 +902,9 @@
     <a href="/">
         <h1>Recomandări Dispozitive Electronice</h1>
     </a>
+    <div class="header-top-left-actions">
+        <button id="viewStatsButton">Vezi Statistici</button>
+    </div>
     <div class="header-top-right-status">
          <button id="userStatusButton" style="display: none;"></button>
          <button id="logoutButton" style="display: none;">Deconectare</button>
@@ -925,14 +936,6 @@
     <section id="recommendationsList">
         <h2>Recomandări</h2>
         <div id="recommendations"></div>
-    </section>
-
-    <section id="popularStats">
-      <h2>Statistici populare</h2>
-      <ul id="popularList"></ul>
-      <p id="popularStatsInfo" style="text-align: center; font-style: italic; color: #888; margin-top: 1em;">
-        Această secțiune necesită un endpoint de backend dedicat pentru statistici populare, care nu este încă implementat în server.js.
-      </p>
     </section>
   </main>
 
@@ -1064,11 +1067,10 @@
 
   <script>
     const recommendationsListSection = document.getElementById('recommendationsList');
-    const popularStatsSection = document.getElementById('popularStats');
-    const popularStatsInfo = document.getElementById('popularStatsInfo');
-
-    // NOILE ELEMENTE PENTRU STATUS UTILIZATOR
+    
+    // Referințe pentru butoane
     const userStatusButton = document.getElementById('userStatusButton');
+    const viewStatsButton = document.getElementById('viewStatsButton');
 
     async function fetchRecommendations(query = '') {
       const minPrice = document.getElementById('minPrice').value;
@@ -1217,43 +1219,6 @@
            console.error('Error fetching recommendations:', error);
            document.getElementById('recommendations').innerHTML = '<p class="no-results error">Eroare la încărcarea recomandărilor.</p>';
       }
-    }
-
-    async function fetchPopularStats() {
-        const popularList = document.getElementById('popularList');
-        popularList.innerHTML = '';
-        if (popularStatsInfo) {
-           popularStatsInfo.style.display = 'block';
-        }
-
-        try {
-            const res = await fetch('/api/popular');
-            if (res.ok) {
-                const popularData = await res.json();
-                if (popularData && popularData.length > 0) {
-                    popularList.innerHTML = '';
-                    if (popularStatsInfo) { popularStatsInfo.style.display = 'none'; }
-                    popularData.forEach(item => {
-                        const li = document.createElement('li');
-                        li.textContent = `${item.name || item.model || item.type} (${item.views || item.count} vizualizări)`;
-                        popularList.appendChild(li);
-                    });
-                } else {
-                    popularList.innerHTML = '<li>Nu sunt statistici populare disponibile.</li>';
-                    if (popularStatsInfo) { popularStatsInfo.style.display = 'none'; }
-                }
-            } else {
-                console.warn('Endpoint /api/popular not found or returned error:', res.status, res.statusText);
-                 popularList.innerHTML = '<li>Nu sunt statistici populare disponibile momentan.</li>';
-                 // Keep the info message visible if the endpoint isn't working as expected
-                 if (popularStatsInfo) { popularStatsInfo.style.display = 'block'; }
-            }
-        } catch (error) {
-            console.error('Error fetching popular stats:', error);
-            popularList.innerHTML = '<li>A apărut o eroare la încărcarea statisticilor populare.</li>';
-            // Keep the info message visible on network error
-            if (popularStatsInfo) { popularStatsInfo.style.display = 'block'; }
-        }
     }
 
     document.getElementById('searchInput').addEventListener('input', () => {
@@ -1406,7 +1371,7 @@
         userStatusButton.style.display = 'block';
         logoutButton.style.display = 'block';
         viewFavoritesButton.style.display = 'block';
-
+        
 
         userStatusButton.textContent = `${username} (${role})`;
 
@@ -1426,11 +1391,8 @@
         logoutButton.style.display = 'none';
         addProductButton.style.display = 'none';
         viewFavoritesButton.style.display = 'none';
-
-        userStatusButton.textContent = '';
       }
       fetchRecommendations(document.getElementById('searchInput').value);
-      fetchPopularStats();
     }
 
     loginSubmitButton.addEventListener('click', async (event) => {
@@ -1542,6 +1504,11 @@
 
     viewFavoritesButton.addEventListener('click', () => {
         window.location.href = '/favorites.html';
+    });
+
+    // NEW: Event listener for the "View Statistics" button
+    viewStatsButton.addEventListener('click', () => {
+        window.location.href = '/stats.html';
     });
 
 
@@ -1709,8 +1676,8 @@
         const batteryLife = editProductBatteryLifeInput.value ? parseInt(editProductBatteryLifeInput.value, 10) : null;
         const type = editProductTypeInput.value;
         const features = editProductFeaturesInput.value.split(',').map(f => f.trim()).filter(f => f.length > 0);
-        const link = editProductLinkInput.value.trim();
-        const image = editProductImageInput.value.trim();
+        const link = productLinkInput.value.trim();
+        const image = productImageInput.value.trim();
 
          if (!productId || !name || isNaN(price) || price <= 0 || !type || features.length === 0) {
             showEditProductStatusMessage('Vă rugăm să completați toate câmpurile obligatorii: Nume, Preț valid (>0), Tip și cel puțin o Caracteristică.', 'error');
@@ -1839,7 +1806,7 @@
 
 
     // Actualizare UI inițială la încărcarea paginii
-    updateAuthUI();
+    document.addEventListener('DOMContentLoaded', updateAuthUI);
   </script>
 </body>
 </html>

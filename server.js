@@ -93,7 +93,10 @@ function serveStatic(res, pathname) {
       filePath = path.join(__dirname, 'product-details.html'); // cite: 1
   } else if (pathname === '/favorites.html') {
       filePath = path.join(__dirname, 'favorites.html'); // cite: 1
-  } else {
+  } else if (pathname === '/stats.html') { // NEW: Add route for stats.html
+      filePath = path.join(__dirname, 'stats.html');
+  }
+  else {
        filePath = path.join(__dirname, 'public', pathname);
        const rootFallbackPath = path.join(__dirname, pathname);
         if (!fs.existsSync(filePath) && fs.existsSync(rootFallbackPath)) {
@@ -169,6 +172,8 @@ http.createServer(async (req, res) => {
           return serveStatic(res, 'product-details.html'); // cite: 1
       } else if (pathname === '/favorites.html') {
           return serveStatic(res, 'favorites.html'); // cite: 1
+      } else if (pathname === '/stats.html') { // NEW: Serve stats.html
+          return serveStatic(res, 'stats.html');
       }
       return serveStatic(res, pathname); // cite: 1
   }
@@ -388,12 +393,12 @@ http.createServer(async (req, res) => {
 
   if (req.method === 'GET' && pathname === '/api/popular') {
       try {
-           const { rows } = await pool.query('SELECT id, name FROM products ORDER BY RANDOM() LIMIT 5'); // cite: 1
-           const popularItems = rows.map(row => ({ name: row.name, views: Math.floor(Math.random() * 100) + 50 })); // cite: 1
-          return sendJSON(res, popularItems); // cite: 1
+           // Modificat: Preluăm atât aprecieri (likes_count) cât și vizualizări (views_count)
+           const { rows } = await pool.query('SELECT name, COALESCE(likes_count, 0) as likes_count, COALESCE(views_count, 0) as views_count FROM products ORDER BY likes_count DESC, views_count DESC LIMIT 10'); 
+           return sendJSON(res, rows);
       } catch (error) {
-          console.error('Error fetching popular stats:', error); // cite: 1
-          return sendJSON(res, [], 500); // cite: 1
+          console.error('Error fetching popular stats:', error);
+          return sendJSON(res, [], 500);
       }
   }
 
@@ -434,7 +439,7 @@ http.createServer(async (req, res) => {
         res.writeHead(200, { 'Content-Type': 'application/rss+xml', 'Access-Control-Allow-Origin': '*' }); // cite: 1
         return res.end(feed.xml({ indent: true })); // cite: 1
     } catch (error) {
-        console.error('Error generating RSS feed from DB:', error); // cite: 1
+        console.error('Eroare la generarea feed-ului RSS din DB:', error); // cite: 1
         return sendJSON(res, { message: 'Eroare la generarea feed-ului RSS.' }, 500); // cite: 1
     }
   }

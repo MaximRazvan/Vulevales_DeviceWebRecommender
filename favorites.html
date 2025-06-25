@@ -1,272 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8" >
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" >
   <title>Produsele mele favorite - Recomandări Dispozitive Electronice</title>
+  <link rel="icon" href="ico.jpg" type="image/jpeg">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
-  <style>
-    /* Stiluri similare cu index.html și product-details.html pentru consistență */
-    /* NOUA TEMATICĂ: Gri în loc de alb, Portocaliu, Roșu */
-    :root {
-      --primary-color: #FF8C00; /* Portocaliu vibrant - pentru acțiuni primare, highlight-uri */
-      --secondary-color: #555555; /* Gri închis - pentru acțiuni secundare, titluri secțiuni */
-      --accent-color: #f44336; /* Roșu - pentru acțiuni de avertizare/ștergere */
-      --neutral-dark: #333333; /* Gri foarte închis - pentru fundaluri întunecate (header, footer), text principal */
-      --neutral-light: #c0c0c0; /* Gri mediu - pentru fundalul principal al paginii */
-      --card-bg: #e0e0e0; /* Gri deschis - pentru fundalul cardurilor */
-      --input-bg: #f0f0f0; /* Gri foarte deschis - pentru fundalul câmpurilor de input */
-      --text-dark: var(--neutral-dark); /* Alias pentru gri închis */
-      --text-light: #ffffff; /* Alb - pentru text pe fundal întunecat */
-      --border-color: #a0a0a0; /* Gri mediu - pentru borduri */
-      --favorite-color-base: #FFB066; /* Portocaliu deschis - pentru butonul de favorite */
-      --favorite-color-active: #FF9933; /* Portocaliu mediu - pentru starea "favoritat" și hover */
-
-      --shadow-light: rgba(0, 0, 0, 0.08);
-      --shadow-medium: rgba(0, 0, 0, 0.15);
-    }
-
-    body {
-      font-family: 'Roboto', sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: var(--neutral-light); /* Fundal gri mediu */
-      color: var(--text-dark); /* Text gri închis */
-      line-height: 1.6;
-    }
-
-    header {
-      background-color: var(--neutral-dark); /* Fundal gri închis */
-      padding: 1.5em 1em;
-      color: var(--text-light); /* Text alb */
-      text-align: center;
-      position: relative;
-      box-shadow: 0 4px 10px var(--shadow-medium);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 1.5em;
-    }
-    header a {
-        color: inherit;
-        text-decoration: none;
-    }
-    header a:hover {
-         text-decoration: underline;
-    }
-
-    header h1 {
-        font-family: 'Poppins', sans-serif;
-        margin: 0;
-        font-size: 2.8em;
-        color: var(--primary-color); /* Titlu Portocaliu */
-        letter-spacing: -0.03em;
-    }
-
-    main {
-      padding: 3em 1.5em;
-      max-width: 1300px;
-      margin: 0 auto;
-    }
-
-    section {
-      margin-bottom: 3.5em;
-    }
-
-    h2 {
-        font-family: 'Poppins', sans-serif;
-        color: var(--secondary-color); /* Titlu secțiune - Gri închis */
-        text-align: center;
-        margin-bottom: 2em;
-        font-size: 2.4em;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
-
-    #favoritesListContainer {
-        background-color: var(--card-bg); /* Fundal gri deschis */
-        padding: 3em;
-        border-radius: 15px;
-        box-shadow: 0 6px 20px var(--shadow-light);
-    }
-
-    #favoritesGrid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 1.5em;
-    }
-
-    .device-card { /* Stilurile cardului preluate din index.html */
-      background-color: var(--card-bg); /* Fundal gri deschis */
-      padding: 1.8em;
-      border-radius: 15px;
-      box-shadow: 0 6px 20px var(--shadow-light);
-      cursor: pointer;
-      position: relative;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start; /* Aliniază conținutul la începutul cardului */
-      align-items: center; /* Centrează conținutul orizontal în card */
-      text-align: center; /* Centrează textul din card */
-    }
-
-    .device-card:hover {
-      transform: translateY(-8px);
-      box-shadow: 0 12px 30px var(--shadow-medium);
-    }
-
-    .device-actions { /* Stilurile butoanelor de acțiune preluate din index.html */
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-        margin-bottom: 1em;
-        padding-bottom: 1em;
-        border-bottom: 1px solid var(--border-color); /* Bordură gri mediu */
-        z-index: 10;
-         box-sizing: border-box; /* Include padding-ul în lățime */
-    }
-
-    .device-actions button {
-        padding: 9px 14px;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 0.95em;
-        font-weight: 500;
-        transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-        color: var(--text-light); /* Text alb pe butoane de acțiune */
-    }
-
-    .device-actions button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-    }
-
-    .device-actions button.remove-favorite-btn { /* Stil specific pentru butonul de eliminare */
-        background-color: var(--accent-color); /* Roșu pentru eliminare */
-    }
-    .device-actions button.remove-favorite-btn:hover {
-        background-color: #c82333; /* Nuanță mai închisă la hover */
-    }
-
-    /* Stiluri pentru imaginea produsului in card */
-    .product-image {
-        max-width: 100%;
-        height: 200px; /* Setează o înălțime fixă pentru toate imaginile */
-        object-fit: contain; /* Asigură că imaginea este conținută în spațiu fără a fi tăiată */
-        border-radius: 8px;
-        margin-bottom: 1em;
-        display: block;
-        margin-left: auto;
-        margin-right: auto;
-    }
-
-    .device-card h3 {
-        color: var(--primary-color); /* Nume produs în card - Portocaliu */
-        margin-top: 0;
-        margin-bottom: 0.7em;
-        font-size: 1.7em;
-        font-weight: 600;
-        min-height: 2.5em; /* Asigură o înălțime minimă pentru titlu */
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 100%; /* Ocupă lățimea completă pentru centrare */
-    }
-
-    .device-card p {
-        margin-bottom: 0.4em;
-        font-size: 1.05em;
-        color: #444; /* Text informații produs - Gri mediu */
-         min-height: 1.2em; /* Asigură o înălțime minimă pentru fiecare paragraf */
-         width: 100%; /* Ocupă lățimea completă pentru centrare */
-    }
-
-    .message {
-        text-align: center;
-        font-style: italic;
-        color: #666; /* Gri mediu */
-        margin-top: 2.5em;
-        font-size: 1.2em;
-    }
-    .message.error {
-        color: var(--accent-color); /* Roșu pentru erori */
-    }
-
-    #backToHome {
-        background-color: #6c757d; /* Gri închis pentru butonul înapoi */
-        color: var(--text-light);
-        padding: 13px 25px;
-        border: none;
-        border-radius: 25px;
-        cursor: pointer;
-        font-size: 1.05em;
-        margin-top: 0; /* Ajustat, va fi în container */
-        display: block;
-        width: fit-content;
-        margin-bottom: 1.5em;
-        transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
-
-    #backToHome:hover {
-        background-color: #5a6268; /* Nuanță mai închisă la hover */
-        transform: translateY(-3px);
-        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
-    }
-
-    footer {
-      background-color: var(--neutral-dark); /* Fundal gri închis */
-      color: var(--text-light); /* Text alb */
-      text-align: center;
-      padding: 1.8em;
-      box-shadow: 0 -4px 10px var(--shadow-medium);
-      font-size: 1.1em;
-    }
-
-    footer a {
-        color: var(--primary-color); /* Link footer - Portocaliu */
-        text-decoration: none;
-        font-weight: 500;
-        transition: color 0.2s ease;
-    }
-
-    footer a:hover {
-        color: #E07B00; /* Nuanță mai închisă la hover */
-        text-decoration: underline;
-    }
-
-    @media (max-width: 768px) {
-      header { padding: 1.5em 0.8em; gap: 1.2em; }
-      header h1 { font-size: 2.2em; }
-      main { padding: 2em 0.8em; }
-      h2 { font-size: 2em; margin-bottom: 1.8em; }
-      #favoritesListContainer { padding: 2em; }
-      #favoritesGrid { grid-template-columns: 1fr; }
-      .device-card { padding: 1.5em; }
-      .device-card h3 { font-size: 1.4em; }
-      .device-card p { font-size: 1.05em; }
-      .device-actions { position: static; display: flex !important; justify-content: flex-end; margin-top: 0.5em; gap: 8px; padding-bottom: 0.5em; border-bottom: 1px solid var(--border-color); }
-      .device-actions button { padding: 8px 12px; font-size: 0.85em; border-radius: 6px; }
-      #backToHome { padding: 12px 20px; font-size: 1em; }
-    }
-    @media (max-width: 480px) {
-        header h1 { font-size: 1.8em; }
-        h2 { font-size: 1.6em; }
-        #favoritesListContainer { padding: 1.5em; }
-        .device-card { padding: 1em; }
-        .device-card h3 { font-size: 1.1em; }
-        .device-card p { font-size: 0.85em; }
-        .device-actions button { padding: 5px 8px; font-size: 0.75em; }
-        #backToHome { padding: 10px 15px; font-size: 0.9em; }
-    }
-  </style>
-</head>
+  <link rel="stylesheet" href="favorites.css"> </head>
 <body>
   <header>
      <a href="/">
@@ -276,13 +16,13 @@
 
   <main>
     <section id="favoritesListContainer">
-      <button id="backToHome">Înapoi la pagina principală</button>
+      <button id="backToHome">Înapoi la pagina principala</button>
       <h2>Produsele mele favorite</h2>
       <div id="favoritesGrid">
         </div>
-      <p id="loadingMessage" class="message">Se încarcă produsele favorite...</p>
+      <p id="loadingMessage" class="message">Se încarca produsele favorite...</p>
       <p id="errorMessage" class="message error" style="display: none;"></p>
-      <p id="noFavoritesMessage" class="message" style="display: none;">Nu ai produse adăugate la favorite.</p>
+      <p id="noFavoritesMessage" class="message" style="display: none;">Nu ai produse adaugate la favorite.</p>
     </section>
   </main>
 
@@ -297,17 +37,17 @@
     const noFavoritesMessage = document.getElementById('noFavoritesMessage');
     const backToHomeButton = document.getElementById('backToHome');
 
-    // Funcție pentru a prelua și afișa favoritele utilizatorului
+    // Functie pentru a prelua si afisa favoritele utilizatorului
     async function fetchAndDisplayFavorites() {
         loadingMessage.style.display = 'block';
         errorMessage.style.display = 'none';
         noFavoritesMessage.style.display = 'none';
-        favoritesGrid.innerHTML = ''; // Golește grid-ul înainte de a încărca
+        favoritesGrid.innerHTML = ''; 
 
         const token = localStorage.getItem('token');
         if (!token) {
             loadingMessage.style.display = 'none';
-            errorMessage.textContent = 'Nu sunteți autentificat. Vă rugăm să vă conectați pentru a vedea favoritele.';
+            errorMessage.textContent = 'Nu sunteti autentificat. Va rugam sa va conectati pentru a vedea favoritele.';
             errorMessage.style.display = 'block';
             return;
         }
@@ -344,13 +84,13 @@
                 actionsDiv.className = 'device-actions';
 
                 const removeFavoriteButton = document.createElement('button');
-                removeFavoriteButton.textContent = 'Elimină din Favorite';
+                removeFavoriteButton.textContent = 'Elimina din Favorite';
                 removeFavoriteButton.className = 'remove-favorite-btn';
                 removeFavoriteButton.addEventListener('click', async (e) => {
                     e.stopPropagation();
-                    if (confirm('Ești sigur că vrei să elimini acest produs din favorite?')) {
+                    if (confirm('Esti sigur ca vrei sa elimini acest produs din favorite?')) {
                         await removeFromFavorites(device.id);
-                        fetchAndDisplayFavorites(); // Re-încarcă lista după eliminare
+                        fetchAndDisplayFavorites();
                     }
                 });
                 actionsDiv.appendChild(removeFavoriteButton);
@@ -365,15 +105,15 @@
                     div.appendChild(img);
                 } else {
                     const placeholder = document.createElement('div');
-                    placeholder.className = 'product-image-placeholder'; // Using same placeholder style as index
-                    placeholder.textContent = 'Fără imagine';
+                    placeholder.className = 'product-image-placeholder';
+                    placeholder.textContent = 'Fara imagine';
                     div.appendChild(placeholder);
                 }
 
 
                 const contentHTML = `
                   <h3>${device.name}</h3>
-                  <p>Preț: ${device.price} Lei</p>
+                  <p>Pret: ${device.price} Lei</p>
                   <p>Caracteristici: ${device.features.join(', ')}</p>
                 `;
                 const tempDiv = document.createElement('div');
@@ -391,18 +131,18 @@
             });
 
         } catch (error) {
-            console.error('Eroare la preluarea și afișarea favoritelor:', error);
+            console.error('Eroare la preluarea si afisarea favoritelor:', error);
             loadingMessage.style.display = 'none';
-            errorMessage.textContent = 'A apărut o eroare de rețea la încărcarea favoritelor.';
+            errorMessage.textContent = 'A aparut o eroare de retea la încarcarea favoritelor.';
             errorMessage.style.display = 'block';
         }
     }
 
-    // Funcție pentru eliminarea din favorite (similară cu cea din index.html)
+    // Functie pentru eliminarea din favorite (similara cu cea din index.html)
     async function removeFromFavorites(productId) {
         const token = localStorage.getItem('token');
         if (!token) {
-            alert('Trebuie să fii autentificat pentru a elimina produse din favorite.');
+            alert('Trebuie sa fii autentificat pentru a elimina produse din favorite.');
             return;
         }
         try {
@@ -414,22 +154,21 @@
             });
             const data = await response.json();
             if (response.ok) {
-                // alert(data.message); // Oprim alerta
             } else {
                 alert(data.message || 'Eroare la eliminarea din favorite.');
             }
         } catch (error) {
             console.error('Eroare la eliminarea din favorite:', error);
-            alert('A apărut o eroare de rețea la eliminarea din favorite.');
+            alert('A aparut o eroare de retea la eliminarea din favorite.');
         }
     }
 
-    // Event listener pentru butonul "Înapoi la pagina principală"
+    // Event listener pentru butonul "Înapoi la pagina principala"
     backToHomeButton.addEventListener('click', () => {
         window.location.href = '/';
     });
 
-    // La încărcarea paginii de favorite, preia și afișează produsele favorite
+    // La încarcarea paginii de favorite, preia si afiseaza produsele favorite
     document.addEventListener('DOMContentLoaded', fetchAndDisplayFavorites);
   </script>
 </body>

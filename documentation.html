@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" >
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" >
+  <title>Documentație Proiect - Recomandări Dispozitive Electronice</title>
+  <link rel="icon" href="ico.jpg" type="image/jpeg">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="documentation.css">
+</head>
+<body>
+  <header>
+     <a href="/">
+        <h1>Recomandări Dispozitive Electronice</h1>
+     </a>
+  </header>
+
+  <main>
+    <section id="documentationContainer">
+      <button id="backToHome">Înapoi la pagina principală</button>
+      <h2>Documentație Proiect</h2>
+
+      <article class="doc-section">
+        <h3>1. Descriere Generală</h3>
+        <p>Acest proiect este o aplicație web concepută pentru a oferi utilizatorilor recomandări de dispozitive electronice. Platforma permite vizualizarea, căutarea și filtrarea produselor. Utilizatorii înregistrați pot salva produse la favorite, iar administratorii au drepturi complete de a adăuga, edita și șterge produse. Proiectul include, de asemenea, funcționalități avansate precum un feed RSS cu cele mai populare produse și statistici vizuale.</p>
+      </article>
+
+      <article class="doc-section">
+          <h3>2. Informații Proiect</h3>
+          <ul>
+              <li><strong>Nume:</strong> <code>device-recommendations</code></li>
+              <li><strong>Versiune:</strong> 1.0.0</li>
+              <li><strong>Autor:</strong> "author"</li>
+              <li><strong>Fișier principal (server):</strong> <code>server.js</code></li>
+          </ul>
+      </article>
+
+      <article class="doc-section">
+        <h3>3. Tehnologii Utilizate</h3>
+        <h4>Backend (Node.js)</h4>
+        <ul>
+            <li><strong>Server:</strong> Modulul <code>http</code> nativ din Node.js (fără Express.js).</li>
+            <li><strong>Bază de Date:</strong> PostgreSQL, găzduită pe AWS RDS.</li>
+            <li><strong>Driver Bază de Date:</strong> <code>pg</code></li>
+            <li><strong>Autentificare:</strong> <code>bcryptjs</code> și <code>jsonwebtoken</code> (JWT).</li>
+            <li><strong>Generare RSS Feed:</strong> <code>rss</code></li>
+            <li><strong>Emailing:</strong> <code>nodemailer</code> pentru a trimite email-uri de confirmare.</li>
+        </ul>
+        <h4>Frontend</h4>
+         <ul>
+            <li><strong>HTML5</strong></li>
+            <li><strong>CSS3</strong> (cu variabile pentru un design system consistent)</li>
+            <li><strong>JavaScript</strong> (Vanilla JS) pentru interacțiuni și apeluri API.</li>
+            <li><strong>Librărie Grafice:</strong> <code>Chart.js</code> pentru afișarea statisticilor.</li>
+        </ul>
+      </article>
+
+      <article class="doc-section">
+          <h3>4. Structura Proiectului</h3>
+           <p>Proiectul este compus din următoarele fișiere principale:</p>
+          <ul>
+            <li><code>server.js</code>: Logica backend a aplicației.</li>
+            <li><code>package.json</code>: Definește metadatele proiectului și dependențele.</li>
+            <li><code>index.html</code>: Pagina principală a aplicației.</li>
+            <li><code>product-details.html</code>: Pagină pentru detaliile unui produs.</li>
+            <li><code>favorites.html</code>: Pagină pentru produsele favorite ale utilizatorului.</li>
+            <li><code>stats.html</code>: Pagină pentru statistici vizuale.</li>
+            <li><code>documentation.html</code>: Această pagină de documentație.</li>
+            <li><code>*.css</code>: Fișiere de stilizare corespunzătoare.</li>
+        </ul>
+      </article>
+
+       <article class="doc-section">
+          <h3>5. Arhitectura Backend</h3>
+          <h4>5.1. Configurare</h4>
+          <ul>
+              <li><strong>Server:</strong> Ascultă pe portul 3000.</li>
+              <li><strong>Baza de Date:</strong> Se conectează la o instanță PostgreSQL pe AWS RDS. Detaliile conexiunii sunt definite în obiectul `pool`.</li>
+              <li><strong>JWT Secret:</strong> Cheia secretă pentru semnarea token-urilor JWT este gestionată printr-o variabilă de mediu sau un fallback.</li>
+              <li><strong>Nodemailer:</strong> Folosește un cont Gmail pentru a trimite email-uri.</li>
+          </ul>
+
+          <h4>5.2. Endpoint-uri API</h4>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Metodă</th>
+                  <th>Rută</th>
+                  <th>Descriere</th>
+                  <th>Permisiuni</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>POST</td><td>/api/register</td><td>Înregistrează un utilizator nou.</td><td>Public</td></tr>
+                <tr><td>POST</td><td>/api/login</td><td>Autentifică un utilizator și returnează un token JWT.</td><td>Public</td></tr>
+                <tr><td>GET</td><td>/api/recommendations</td><td>Returnează o listă de produse.</td><td>Public</td></tr>
+                <tr><td>GET</td><td>/api/products/:id</td><td>Returnează detaliile unui produs.</td><td>Public</td></tr>
+                <tr><td>POST</td><td>/api/products</td><td>Adaugă un produs nou.</td><td>Admin</td></tr>
+                <tr><td>PUT</td><td>/api/products/:id</td><td>Actualizează detaliile unui produs.</td><td>Admin</td></tr>
+                <tr><td>DELETE</td><td>/api/products/:id</td><td>Șterge un produs.</td><td>Admin</td></tr>
+                <tr><td>GET</td><td>/api/favorites</td><td>Returnează lista de favorite a utilizatorului.</td><td>Utilizator</td></tr>
+                <tr><td>POST</td><td>/api/favorites</td><td>Adaugă un produs la favorite.</td><td>Utilizator</td></tr>
+                <tr><td>DELETE</td><td>/api/favorites/:id</td><td>Elimină un produs din favorite.</td><td>Utilizator</td></tr>
+                <tr><td>GET</td><td>/api/favorites/check/:id</td><td>Verifică dacă un produs este favorit.</td><td>Utilizator</td></tr>
+                <tr><td>GET</td><td>/api/popular</td><td>Returnează top 10 produse populare.</td><td>Public</td></tr>
+                <tr><td>GET</td><td>/rss</td><td>Generează un feed RSS cu top 5 cele mai vizualizate produse.</td><td>Public</td></tr>
+              </tbody>
+            </table>
+          </div>
+      </article>
+      
+      <article class="doc-section">
+          <h3>6. Componente Frontend</h3>
+          <h4>6.1. Pagina Principală (index.html)</h4>
+          <ul>
+              <li><strong>Afișare Produse:</strong> Prezintă produsele într-un grid responsive.</li>
+              <li><strong>Căutare & Filtre:</strong> Permite căutarea în timp real și filtrarea după preț, autonomie și tip.</li>
+              <li><strong>Acțiuni Utilizator:</strong> Butoane pentru "Conectare/Înregistrare", "Favoritele mele", "Vezi Statistici", "Documentație" și "Adaugă Produs" (admin).</li>
+              <li><strong>Pop-ups (Modals):</strong> Ferestre modale pentru autentificare, înregistrare, adăugare și editare produs.</li>
+          </ul>
+          <h4>6.2. Pagina Detalii Produs (product-details.html)</h4>
+          <ul>
+              <li><strong>Afișare Detaliată:</strong> Arată toate informațiile despre un produs, inclusiv statistici (aprecieri, vizualizări).</li>
+              <li><strong>Acțiuni:</strong> Butoane pentru adăugare/eliminare la favorite, editare și ștergere (rol-dependent).</li>
+          </ul>
+           <h4>6.3. Pagina Favorite (favorites.html)</h4>
+          <ul>
+              <li><strong>Listă Personală:</strong> Afișează toate produsele marcate ca favorite de către utilizatorul curent.</li>
+          </ul>
+           <h4>6.4. Pagina Statistici (stats.html)</h4>
+          <ul>
+              <li><strong>Vizualizare Date:</strong> Utilizează `Chart.js` pentru a afișa grafice cu cele mai apreciate și vizualizate produse.</li>
+          </ul>
+          <h4>6.5. Styling (CSS)</h4>
+          <ul>
+              <li><strong>Design System:</strong> Utilizează variabile CSS (`:root`) pentru o paletă de culori consistentă.</li>
+              <li><strong>Responsive Design:</strong> Stilurile sunt adaptate pentru diverse dimensiuni de ecran folosind media queries.</li>
+          </ul>
+      </article>
+
+      <article class="doc-section">
+          <h3>7. Funcționalități Cheie</h3>
+          <h4>7.1. Sistemul de Autentificare și Roluri</h4>
+          <ul>
+              <li><strong>Înregistrare:</strong> Parolele sunt securizate prin hashing (bcrypt). Primul utilizator înregistrat primește rolul de `admin`.</li>
+              <li><strong>Autentificare:</strong> Generează un token JWT cu valabilitate de 15 minute.</li>
+              <li><strong>Roluri:</strong> Sistem cu două roluri (User, Admin) care dictează accesul la anumite funcționalități.</li>
+          </ul>
+          <h4>7.2. Management Produse (CRUD)</h4>
+          <ul>
+              <li>Administratorii pot efectua operații de Creare, Citire, Actualizare și Ștergere (CRUD) asupra produselor.</li>
+          </ul>
+           <h4>7.3. Sistem de Favorite</h4>
+          <ul>
+              <li>Utilizatorii autentificați pot adăuga și elimina produse din lista personală de favorite. Adăugarea/eliminarea afectează contorul de aprecieri (`likes_count`) al produsului.</li>
+          </ul>
+          <h4>7.4. Feed RSS</h4>
+          <ul>
+              <li>Endpoint-ul `/rss` generează un feed RSS valid care conține top 5 cele mai vizualizate produse, permițând urmărirea popularității.</li>
+          </ul>
+      </article>
+    </section>
+  </main>
+
+  <footer>
+    <div class="rss-box">
+        <a href="/rss">RSS Feed</a>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById('backToHome').addEventListener('click', () => {
+        window.location.href = '/';
+    });
+  </script>
+</body>
+</html>

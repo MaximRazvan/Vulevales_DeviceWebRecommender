@@ -524,6 +524,40 @@ h2 {
   box-shadow: 0 0 0 4px rgba(85, 85, 85, 0.3);
 }
 
+/* MODIFICAT: Stiluri pentru containerul parolei si butonul de toggle */
+.password-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.password-container input[type="password"],
+.password-container input[type="text"] {
+    width: 100%;
+    padding-right: 70px; /* Spatiu pentru buton */
+}
+
+.toggle-password {
+    position: absolute;
+    right: 5px;
+    height: 80%;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--secondary-color);
+    font-weight: 600;
+    font-size: 0.9em;
+    padding: 0 10px;
+    outline: none;
+}
+
+.toggle-password:hover {
+    color: var(--primary-color);
+}
+/* Sfarsit Modificari */
+
+
 .modal-buttons {
   display: flex;
   justify-content: center;

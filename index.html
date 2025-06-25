@@ -59,14 +59,23 @@
   <div id="loginModal" class="modal">
     <div class="modal-content">
       <span class="close-button login-close-button">×</span>
-      <h2>Conectare</h2> <form id="loginForm"> <label for="loginUsername">Nume utilizator:</label>
-        <input type="text" id="loginUsername" name="username" required> <label for="loginPassword">Parola:</label>
-        <input type="password" id="loginPassword" name="password" required> <div class="modal-buttons">
+      <h2>Conectare</h2>
+      <form id="loginForm">
+        <label for="loginUsername">Nume utilizator:</label>
+        <input type="text" id="loginUsername" name="username" required>
+        <label for="loginPassword">Parola:</label>
+        <!-- MODIFICAT: Adaugat container pentru parola si buton -->
+        <div class="password-container">
+            <input type="password" id="loginPassword" name="password" required>
+            <button type="button" class="toggle-password">Arată</button>
+        </div>
+        <div class="modal-buttons">
           <button type="button" id="loginSubmit">Conectare</button>
           <button type="button" id="openRegisterModal">Înregistrare</button>
         </div>
       </form>
-      <div id="loginStatusMessage" class="status-message"></div> </div>
+      <div id="loginStatusMessage" class="status-message"></div>
+    </div>
   </div>
 
   <div id="registerModal" class="modal">
@@ -78,8 +87,21 @@
         <input type="text" id="registerUsername" name="username" required>
 
         <label for="registerEmail">Email:</label>
-        <input type="email" id="registerEmail" name="email" required> <label for="registerPassword">Parola:</label>
-        <input type="password" id="registerPassword" name="password" required>
+        <input type="email" id="registerEmail" name="email" required>
+
+        <label for="registerPassword">Parola:</label>
+        <!-- MODIFICAT: Adaugat container pentru parola si buton -->
+        <div class="password-container">
+            <input type="password" id="registerPassword" name="password" required>
+            <button type="button" class="toggle-password">Arată</button>
+        </div>
+
+        <!-- MODIFICAT: Adaugat camp de confirmare parola -->
+        <label for="registerConfirmPassword">Confirmare Parola:</label>
+        <div class="password-container">
+            <input type="password" id="registerConfirmPassword" name="confirm_password" required>
+            <button type="button" class="toggle-password">Arată</button>
+        </div>
 
         <div class="modal-buttons">
           <button type="button" id="registerSubmit">Înregistrare</button>
@@ -366,6 +388,8 @@
     const registerUsernameInput = document.getElementById('registerUsername');
     const registerEmailInput = document.getElementById('registerEmail'); 
     const registerPasswordInput = document.getElementById('registerPassword');
+    // MODIFICAT: Adaugat referinta la campul de confirmare
+    const registerConfirmPasswordInput = document.getElementById('registerConfirmPassword');
     const registerStatusMessageDiv = document.getElementById('registerStatusMessage');
 
     const loginForm = document.getElementById('loginForm');
@@ -397,6 +421,8 @@
       registerUsernameInput.value = '';
       registerEmailInput.value = ''; 
       registerPasswordInput.value = '';
+      // MODIFICAT: Resetat si campul de confirmare
+      registerConfirmPasswordInput.value = '';
     });
 
     
@@ -541,7 +567,15 @@
       event.preventDefault();
       const username = registerUsernameInput.value; 
       const email = registerEmailInput.value; 
-      const password = registerPasswordInput.value; 
+      const password = registerPasswordInput.value;
+      // MODIFICAT: Preluat valoarea parolei de confirmare
+      const confirmPassword = registerConfirmPasswordInput.value;
+
+      // MODIFICAT: Adaugat validare pentru potrivirea parolelor
+      if (password !== confirmPassword) {
+          showRegisterStatusMessage('Parolele nu se potrivesc.', 'error');
+          return;
+      }
 
       const minLength = 6;
       const hasUppercase = /[A-Z]/.test(password);
@@ -582,6 +616,8 @@
            registerUsernameInput.value = '';
            registerEmailInput.value = ''; 
            registerPasswordInput.value = '';
+           // MODIFICAT: Resetat si campul de confirmare
+           registerConfirmPasswordInput.value = '';
            
            setTimeout(() => {
                registerModal.style.display = 'none';
@@ -920,6 +956,18 @@
         // Această funcție va fi responsabilă pentru a pregăti pagina,
         // inclusiv pentru a atașa event listeners și a încărca datele inițiale.
         updateAuthUI();
+
+        // MODIFICAT: Logica pentru butoanele de arata/ascunde parola
+        document.querySelectorAll('.toggle-password').forEach(button => {
+            button.addEventListener('click', () => {
+                const passwordInput = button.parentElement.querySelector('input');
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                
+                // Schimba textul butonului
+                button.textContent = type === 'password' ? 'Arată' : 'Ascunde';
+            });
+        });
     }
 
     // Rulează la prima încărcare a paginii

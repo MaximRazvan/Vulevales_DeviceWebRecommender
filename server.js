@@ -22,7 +22,7 @@ const pool = new Pool({
   port: 5432,  
 
   ssl: {
-      rejectUnauthorized: false // Seteaza true în productie daca ai certificat, false pentru dezvoltare/simplitate  
+      rejectUnauthorized: false
   }
 });
 

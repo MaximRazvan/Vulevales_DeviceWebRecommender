@@ -4,7 +4,7 @@ const path = require('path');
 const url = require('url');  
 const { Pool } = require('pg');  
 const bcrypt = require('bcryptjs');  
-const jwt = require('jsonwebtoken');  
+const jwt =require('jsonwebtoken');  
 const RSS = require('rss');  
 const fetch = require('node-fetch'); 
 const cheerio = require('cheerio');  
@@ -73,7 +73,6 @@ function parseBody(req) {
   });
 }
 
-//   Helper to serve static files from 'public' directory  
 function serveStatic(res, pathname) {
    if (res.headersSent) {
         console.warn('Attempted to serve static file after headers sent!');  
@@ -89,7 +88,7 @@ function serveStatic(res, pathname) {
       filePath = path.join(__dirname, 'favorites.html');  
   } else if (pathname === '/stats.html') { 
       filePath = path.join(__dirname, 'stats.html');
-  } else if (pathname === '/documentation.html') { // MODIFICARE ADĂUGATĂ
+  } else if (pathname === '/documentation.html') { 
       filePath = path.join(__dirname, 'documentation.html');
   }
   else {
@@ -170,16 +169,16 @@ http.createServer(async (req, res) => {
           return serveStatic(res, 'favorites.html');  
       } else if (pathname === '/stats.html') { 
           return serveStatic(res, 'stats.html');
-      } else if (pathname === '/documentation.html') { // MODIFICARE ADĂUGATĂ
+      } else if (pathname === '/documentation.html') { 
           return serveStatic(res, 'documentation.html');
       }
       return serveStatic(res, pathname);  
   }
 
   if (req.method === 'GET' && pathname === '/api/recommendations') {
-    const { q = '', minPrice, maxPrice, batteryLife, deviceType } = parsedUrl.query;  
+    const { q = '', minPrice, maxPrice, batteryLife, deviceType, siteName } = parsedUrl.query;  
 
-    let queryText = 'SELECT id, name, price, batterylife, type, features, link, image FROM products WHERE 1=1';  
+    let queryText = 'SELECT id, name, price, batterylife, type, features, link, image, site_name FROM products WHERE 1=1';  
     const queryParams = [];  
     let paramIndex = 1;  
 
@@ -198,6 +197,10 @@ http.createServer(async (req, res) => {
     if (deviceType) {
         queryText += ` AND type = $${paramIndex++}`;  
         queryParams.push(deviceType.toLowerCase());  
+    }
+    if (siteName) {
+        queryText += ` AND site_name = $${paramIndex++}`;
+        queryParams.push(siteName);
     }
 
     if (q) {
@@ -229,7 +232,7 @@ http.createServer(async (req, res) => {
     }
     try {
         const queryText = `
-            SELECT id, name, price, batterylife, type, features, link, image, 
+            SELECT id, name, price, batterylife, type, features, link, image, site_name, 
                    COALESCE(likes_count, 0) as likes_count, 
                    COALESCE(views_count, 0) as views_count 
             FROM products WHERE id = $1
@@ -259,7 +262,7 @@ http.createServer(async (req, res) => {
       }
 
       try {
-        const { name, price, batteryLife, type, features, link, image } = await parseBody(req);  
+        const { name, price, batteryLife, type, features, link, image, siteName } = await parseBody(req);  
 
         if (!name || typeof name !== 'string' || name.trim() === '') {
             return sendJSON(res, { message: 'Numele produsului este obligatoriu.' }, 400);  
@@ -280,10 +283,11 @@ http.createServer(async (req, res) => {
         const parsedBatteryLife = batteryLife ? parseInt(batteryLife, 10) : null;  
         const parsedLink = link && typeof link === 'string' && link.trim() !== '' ? link.trim() : null;  
         const parsedImage = image && typeof image === 'string' && image.trim() !== '' ? image.trim() : null;  
+        const parsedSiteName = siteName && typeof siteName === 'string' && siteName.trim() !== '' ? siteName.trim() : null;
 
         const result = await pool.query(
-          'INSERT INTO products (name, price, batterylife, type, features, link, image) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, name',  
-          [name.trim(), parsedPrice, parsedBatteryLife, type.trim().toLowerCase(), featuresArray, parsedLink, parsedImage]  
+          'INSERT INTO products (name, price, batterylife, type, features, link, image, site_name) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, name',  
+          [name.trim(), parsedPrice, parsedBatteryLife, type.trim().toLowerCase(), featuresArray, parsedLink, parsedImage, parsedSiteName]  
         );
         return sendJSON(res, { message: 'Produs adaugat cu succes!', product: result.rows[0] }, 201);  
       } catch (error) {
@@ -306,7 +310,7 @@ http.createServer(async (req, res) => {
       }
 
       try {
-        const { name, price, batteryLife, type, features, link, image } = await parseBody(req);  
+        const { name, price, batteryLife, type, features, link, image, siteName } = await parseBody(req);  
 
          if (!name || typeof name !== 'string' || name.trim() === '') {
              return sendJSON(res, { message: 'Numele produsului este obligatoriu.' }, 400);  
@@ -327,10 +331,11 @@ http.createServer(async (req, res) => {
          const parsedBatteryLife = batteryLife ? parseInt(batteryLife, 10) : null;  
          const parsedLink = link && typeof link === 'string' && link.trim() !== '' ? link.trim() : null;  
          const parsedImage = image && typeof image === 'string' && image.trim() !== '' ? image.trim() : null;  
+         const parsedSiteName = siteName && typeof siteName === 'string' && siteName.trim() !== '' ? siteName.trim() : null;
 
         const result = await pool.query(
-          'UPDATE products SET name = $1, price = $2, batterylife = $3, type = $4, features = $5, link = $6, image = $7 WHERE id = $8 RETURNING id, name',  
-          [name.trim(), parsedPrice, parsedBatteryLife, type.trim().toLowerCase(), featuresArray, parsedLink, parsedImage, productId]  
+          'UPDATE products SET name = $1, price = $2, batterylife = $3, type = $4, features = $5, link = $6, image = $7, site_name = $8 WHERE id = $9 RETURNING id, name',  
+          [name.trim(), parsedPrice, parsedBatteryLife, type.trim().toLowerCase(), featuresArray, parsedLink, parsedImage, parsedSiteName, productId]  
         );
 
         if (result.rows.length > 0) {
@@ -401,7 +406,7 @@ http.createServer(async (req, res) => {
 
   if (req.method === 'GET' && pathname === '/rss') {
     try {
-        const queryText = 'SELECT id, name, price, batterylife, type, features, link, created_at, image, COALESCE(views_count, 0) as views_count FROM products ORDER BY views_count DESC NULLS LAST LIMIT 5';
+        const queryText = 'SELECT id, name, price, batterylife, type, features, link, created_at, image, site_name, COALESCE(views_count, 0) as views_count FROM products ORDER BY views_count DESC NULLS LAST LIMIT 5';
         const { rows } = await pool.query(queryText);
 
         const feed = new RSS({
@@ -415,7 +420,7 @@ http.createServer(async (req, res) => {
         rows.forEach(d => {
           feed.item({
             title: `${d.name} (${d.views_count} vizualizări)`,
-            description: `Pret: ${d.price} Lei, Autonomie: ${d.batterylife ? d.batterylife + ' ore' : 'N/A'}, Tip: ${d.type}, Caracteristici: ${Array.isArray(d.features) ? d.features.join(', ') : 'N/A'}. Vizualizări: ${d.views_count}.`,
+            description: `Pret: ${d.price} Lei, Autonomie: ${d.batterylife ? d.batterylife + ' ore' : 'N/A'}, Tip: ${d.type}, Caracteristici: ${Array.isArray(d.features) ? d.features.join(', ') : 'N/A'}. Site: ${d.site_name || 'N/A'}. Vizualizări: ${d.views_count}.`,
             url: d.link && d.link !== 'null' && d.link.trim() !== '' ? d.link : `http://localhost:${PORT}/product-details.html?product_id=${d.id}`,
             date: d.created_at || new Date(),
             guid: d.id,
@@ -429,6 +434,17 @@ http.createServer(async (req, res) => {
         console.error('Eroare la generarea feed-ului RSS din DB:', error);
         return sendJSON(res, { message: 'Eroare la generarea feed-ului RSS.' }, 500);
     }
+  }
+
+  if (req.method === 'GET' && pathname === '/api/sites') {
+      try {
+          const { rows } = await pool.query('SELECT DISTINCT site_name FROM products WHERE site_name IS NOT NULL AND site_name <> \'\' ORDER BY site_name');
+          const sites = rows.map(row => row.site_name);
+          return sendJSON(res, sites);
+      } catch (error) {
+          console.error('Error fetching distinct sites from DB:', error);
+          return sendJSON(res, { message: 'Eroare la preluarea site-urilor.' }, 500);
+      }
   }
 
   //   API Endpoint: User Registration  
@@ -631,7 +647,7 @@ http.createServer(async (req, res) => {
 
       try {
         const { rows } = await pool.query(
-          `SELECT p.id, p.name, p.price, p.batterylife, p.type, p.features, p.link, p.image
+          `SELECT p.id, p.name, p.price, p.batterylife, p.type, p.features, p.link, p.image, p.site_name
            FROM products p
            JOIN user_favorites uf ON p.id = uf.product_id
            WHERE uf.user_id = $1

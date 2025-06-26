@@ -84,19 +84,11 @@ h2 {
     margin: 3.5em auto;
 }
 
-.chart-container h3 {
-    text-align: center;
-    font-family: 'Poppins', sans-serif;
-    color: var(--secondary-color);
-    font-size: 1.4em;
-    font-weight: 600;
-}
-
 .chart-container {
     position: relative;
     width: 100%;
     height: 400px; 
-    margin-bottom: 4em;
+    margin-bottom: 2em; 
 }
 
 #popularStatsInfo {
@@ -173,7 +165,7 @@ footer {
   main { padding: 2em 0.8em; }
   h2 { font-size: 2em; margin-bottom: 1.8em; }
   #popularStats { max-width: 90%; padding: 1.5em; }
-  .chart-container { height: 300px; margin-bottom: 3em; /* Ajustare pentru responsive */ }
+  .chart-container { height: 300px; margin-bottom: 1.5em; }
   #backToHome { padding: 12px 20px; font-size: 1em; }
   .rss-box { padding: 1em 1.5em; margin: 1em auto; }
   footer { padding: 1em 0.8em; }
@@ -183,7 +175,7 @@ footer {
   header h1 { font-size: 1.8em; }
   h2 { font-size: 1.6em; }
   #popularStats { padding: 1em; }
-  .chart-container { height: 250px; margin-bottom: 2.5em; /* Ajustare pentru responsive */ }
+  .chart-container { height: 250px; margin-bottom: 1em; }
   #backToHome { padding: 10px 15px; font-size: 0.9em; }
   .rss-box { padding: 0.8em 1em; margin: 0.8em auto; font-size: 0.9em; }
   .rss-box a { font-size: 1em; }

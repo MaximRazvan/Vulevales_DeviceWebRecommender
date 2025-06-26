@@ -40,6 +40,9 @@
         <option value="laptop">Laptop</option>
         <option value="casti">Casti</option>
       </select>
+      <select id="siteFilter">
+        <option value="">Toate site-urile</option>
+      </select>
     </div>
   </header>
 
@@ -142,6 +145,9 @@
         <label for="productImageInput">URL Imagine Produs (optional):</label>
         <input type="url" id="productImageInput" placeholder="Ex: https://exemplu.com/imagine.jpg">
 
+        <label for="productSiteNameInput">Nume Site (optional):</label>
+        <input type="text" id="productSiteNameInput" placeholder="Ex: eMAG, Altex">
+
         <div class="modal-buttons">
           <button type="submit" id="submitProduct">Adaugă Produs</button>
         </div>
@@ -185,6 +191,9 @@
 
                 <label for="editProductImageInput">URL Imagine Produs (optional):</label>
                 <input type="url" id="editProductImageInput" placeholder="Ex: https://exemplu.com/imagine.jpg">
+                
+                <label for="editProductSiteNameInput">Nume Site (optional):</label>
+                <input type="text" id="editProductSiteNameInput" placeholder="Ex: eMAG, Altex">
 
                 <div class="modal-buttons">
                     <button type="submit" id="updateProduct">Actualizeaza Produs</button>
@@ -203,11 +212,38 @@
     const viewStatsButton = document.getElementById('viewStatsButton');
     const viewDocsButton = document.getElementById('viewDocsButton'); 
 
+    async function populateSiteFilter() {
+        try {
+            const res = await fetch('/api/sites');
+            let dbSites = [];
+            if (res.ok) {
+                dbSites = await res.json();
+            } else {
+                console.error('Failed to fetch sites for filter');
+            }
+
+            const allSites = [...new Set([...dbSites])].sort();
+
+            const siteFilter = document.getElementById('siteFilter');
+            siteFilter.innerHTML = '<option value="">Toate site-urile</option>'; 
+            
+            allSites.forEach(site => {
+                const option = document.createElement('option');
+                option.value = site;
+                option.textContent = site.charAt(0).toUpperCase() + site.slice(1);
+                siteFilter.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Error populating site filter:', error);
+        }
+    }
+
     async function fetchRecommendations(query = '') {
       const minPrice = document.getElementById('minPrice').value;
       const maxPrice = document.getElementById('maxPrice').value;
       const batteryLife = document.getElementById('batteryLife').value;
       const deviceType = document.getElementById('deviceType').value;
+      const siteName = document.getElementById('siteFilter').value;
       const userRole = localStorage.getItem('userRole');
       const token = localStorage.getItem('token');
 
@@ -216,7 +252,8 @@
         minPrice,
         maxPrice,
         batteryLife,
-        deviceType
+        deviceType,
+        siteName
       });
 
       try {
@@ -329,6 +366,7 @@
             const contentHTML = `
               <h3>${device.name}</h3>
               <p>Preț: ${device.price} Lei</p>
+              ${device.site_name ? `<p>Site: <strong>${device.site_name}</strong></p>` : ''}
               <p>Caracteristici: ${device.features.join(', ')}</p>
             `;
              const tempDiv = document.createElement('div');
@@ -568,10 +606,9 @@
       const username = registerUsernameInput.value; 
       const email = registerEmailInput.value; 
       const password = registerPasswordInput.value;
-      // MODIFICAT: Preluat valoarea parolei de confirmare
+      
       const confirmPassword = registerConfirmPasswordInput.value;
 
-      // MODIFICAT: Adaugat validare pentru potrivirea parolelor
       if (password !== confirmPassword) {
           showRegisterStatusMessage('Parolele nu se potrivesc.', 'error');
           return;
@@ -616,7 +653,6 @@
            registerUsernameInput.value = '';
            registerEmailInput.value = ''; 
            registerPasswordInput.value = '';
-           // MODIFICAT: Resetat si campul de confirmare
            registerConfirmPasswordInput.value = '';
            
            setTimeout(() => {
@@ -671,6 +707,7 @@
     const productFeaturesInput = document.getElementById('productFeaturesInput');
     const productLinkInput = document.getElementById('productLinkInput');
     const productImageInput = document.getElementById('productImageInput');
+    const productSiteNameInput = document.getElementById('productSiteNameInput');
     const addProductStatusMessageDiv = document.getElementById('addProductStatusMessage');
 
     document.getElementById('addProductButton').addEventListener('click', () => {
@@ -705,6 +742,7 @@
         const features = productFeaturesInput.value.split(',').map(f => f.trim()).filter(f => f.length > 0);
         const link = productLinkInput.value.trim();
         const image = productImageInput.value.trim();
+        const siteName = productSiteNameInput.value.trim();
 
         if (!name || isNaN(price) || price <= 0 || !type || features.length === 0) {
             showAddProductStatusMessage('Va rugam sa completati toate campurile obligatorii: Nume, Preț valid (>0), Tip si cel putin o Caracteristica.', 'error');
@@ -724,7 +762,7 @@
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ name, price, batteryLife, type, features, link, image })
+                body: JSON.stringify({ name, price, batteryLife, type, features, link, image, siteName })
             });
 
             const data = await response.json();
@@ -732,6 +770,7 @@
             if (response.ok) {
                 showAddProductStatusMessage(data.message, 'success');
                 document.getElementById('productForm').reset();
+                populateSiteFilter();
                 updateAuthUI(); 
                 setTimeout(() => {
                     addProductModal.style.display = 'none';
@@ -757,6 +796,7 @@
     const editProductFeaturesInput = document.getElementById('editProductFeaturesInput');
     const editProductLinkInput = document.getElementById('editProductLinkInput');
     const editProductImageInput = document.getElementById('editProductImageInput');
+    const editProductSiteNameInput = document.getElementById('editProductSiteNameInput');
     const editProductStatusMessageDiv = document.getElementById('editProductStatusMessage');
 
     function showEditProductStatusMessage(message, type) {
@@ -792,6 +832,7 @@
                 editProductFeaturesInput.value = product.features.join(', ');
                 editProductLinkInput.value = product.link && product.link !== 'null' ? product.link : '';
                 editProductImageInput.value = product.image && product.image !== 'null' ? product.image : '';
+                editProductSiteNameInput.value = product.site_name || '';
 
                 editProductModal.style.display = 'flex';
             } else {
@@ -826,6 +867,7 @@
         const features = editProductFeaturesInput.value.split(',').map(f => f.trim()).filter(f => f.length > 0);
         const link = editProductLinkInput.value.trim();
         const image = editProductImageInput.value.trim();
+        const siteName = editProductSiteNameInput.value.trim();
 
          if (!productId || !name || isNaN(price) || price <= 0 || !type || features.length === 0) {
             showEditProductStatusMessage('Va rugam sa completati toate campurile obligatorii: Nume, Preț valid (>0), Tip si cel putin o Caracteristica.', 'error');
@@ -845,13 +887,14 @@
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ name, price, batteryLife, type, features, link, image })
+                body: JSON.stringify({ name, price, batteryLife, type, features, link, image, siteName })
             });
 
             const data = await response.json();
 
             if (response.ok) {
                 showEditProductStatusMessage(data.message, 'success');
+                populateSiteFilter();
                 updateAuthUI();
                 setTimeout(() => {
                     editProductModal.style.display = 'none';
@@ -890,6 +933,7 @@
 
             if (response.ok) {
                 alert(data.message);
+                populateSiteFilter();
                 updateAuthUI();
             } else {
                 alert(data.message || `Eroare la ștergerea produsului (Status: ${response.status}).`);
@@ -953,6 +997,7 @@
 
     function initializePage() {
         updateAuthUI();
+        populateSiteFilter();
         document.querySelectorAll('.toggle-password').forEach(button => {
             button.addEventListener('click', () => {
                 const passwordInput = button.parentElement.querySelector('input');

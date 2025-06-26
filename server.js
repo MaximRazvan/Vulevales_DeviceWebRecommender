@@ -53,8 +53,7 @@ function sendJSON(res, data, status = 200) {
   res.writeHead(status, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type, Authorization' });  
   res.end(JSON.stringify(data));  
 }
-
-//   Helper to parse request body for POST/PUT requests  
+ 
 function parseBody(req) {
   return new Promise((resolve, reject) => {
     let body = '';  

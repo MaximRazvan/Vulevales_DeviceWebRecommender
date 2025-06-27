@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" >
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" >
+  <title>Produsele mele favorite - Recomandări Dispozitive Electronice</title>
+  <link rel="icon" href="ico.jpg" type="image/jpeg">
+  
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="favorites.css"> </head>
+<body>
+  <header>
+     <a href="/">
+        <h1>Recomandări Dispozitive Electronice</h1>
+     </a>
+  </header>
+
+  <main>
+    <section id="favoritesListContainer">
+      <button id="backToHome">Înapoi la pagina principala</button>
+      <h2>Produsele mele favorite</h2>
+      <div id="favoritesGrid">
+        </div>
+      <p id="loadingMessage" class="message">Se încarca produsele favorite...</p>
+      <p id="errorMessage" class="message error" style="display: none;"></p>
+      <p id="noFavoritesMessage" class="message" style="display: none;">Nu ai produse adaugate la favorite.</p>
+    </section>
+  </main>
+
+  <footer>
+    <a href="/rss">RSS Feed</a>
+  </footer>
+
+  <script src="js/favorites.js" defer type="module"></script>
+</body>
+</html>

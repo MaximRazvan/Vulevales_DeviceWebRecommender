@@ -17,5 +17,10 @@ module.exports = {
     '/api/products': {
         // Asigura-te ca aici este 'createProduct', nu 'create'
         POST: [authenticateToken, isAdmin, productController.createProduct]
-    }
+    },
+    '/api/products/:id': { 
+        GET: productController.getProductById,
+        DELETE: [authenticateToken, isAdmin, productController.deleteProduct]
+    },
+    
 };

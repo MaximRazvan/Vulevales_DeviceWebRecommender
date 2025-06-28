@@ -132,6 +132,25 @@ async function getDistinctSites(req, res) {
     }
 }
 
+async function deleteProduct(req, res) {
+    const productId = req.params.id;
+    try {
+        // Stergem mai intai intrarile din user_favorites pentru a nu avea erori de constrangere
+        await pool.query('DELETE FROM user_favorites WHERE product_id = $1', [productId]);
+        
+        const result = await pool.query('DELETE FROM products WHERE id = $1 RETURNING id', [productId]);
+
+        if (result.rowCount > 0) {
+            sendJSON(res, { message: 'Produs sters cu succes!' });
+        } else {
+            sendJSON(res, { message: 'Produsul nu a fost gasit pentru stergere.' }, 404);
+        }
+    } catch (error) {
+        console.error(`SERVER ERROR deleting product ID ${productId}:`, error);
+        sendJSON(res, { message: 'Eroare de server la stergerea produsului.' }, 500);
+    }
+}
+
 // Exportam TOATE functiile necesare
 module.exports = {
     getRecommendations,
@@ -139,4 +158,5 @@ module.exports = {
     createProduct,
     getPopularProducts,
     getDistinctSites,
+    deleteProduct, // <-- Asigura-te ca aceasta linie exista
 };

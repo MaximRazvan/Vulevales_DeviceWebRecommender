@@ -52,7 +52,11 @@ export function removeFavorite(productId, token) {
 export function checkFavoriteStatus(productId, token) {
     return _request(`/favorites/check/${productId}`, {}, token);
 }
-
+export function deleteProduct(productId, token) {
+    return _request(`/products/${productId}`, {
+        method: 'DELETE',
+    }, token);
+}
 // --- Alte Functii ---
 export function getSites() {
     return _request('/sites');

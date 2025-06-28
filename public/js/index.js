@@ -1,5 +1,5 @@
 import * as api from './services/api.js';
-import { initAuth, getUserRole } from './auth.js';
+import { initAuth } from './auth.js';
 import { initAdminActions, openEditModal } from './productAdmin.js';
 import { createProductCard } from './ui.js';
 
@@ -18,7 +18,27 @@ const viewDocsButton = document.getElementById('viewDocsButton');
 const viewFavoritesButton = document.getElementById('viewFavoritesButton');
 
 /**
+ * Gestioneaza stergerea unui produs (doar pentru admin).
+ * @param {string} productId - ID-ul produsului de sters.
+ */
+async function handleDeleteProduct(productId) {
+    if (!confirm('Esti sigur ca vrei sa stergi definitiv acest produs? Actiunea este ireversibila!')) {
+        return;
+    }
+    const token = localStorage.getItem('token');
+    try {
+        await api.deleteProduct(productId, token);
+        alert('Produs sters cu succes!');
+        fetchRecommendations(); // Reimprospatam lista
+    } catch (error) {
+        alert(`Eroare la stergere: ${error.message}`);
+    }
+}
+
+/**
  * Gestioneaza adaugarea/stergerea unui produs de la favorite.
+ * @param {string} productId - ID-ul produsului.
+ * @param {boolean} isCurrentlyFavorited - Starea curenta de favorit.
  */
 async function handleFavoriteToggle(productId, isCurrentlyFavorited) {
     const token = localStorage.getItem('token');
@@ -32,7 +52,7 @@ async function handleFavoriteToggle(productId, isCurrentlyFavorited) {
         } else {
             await api.addFavorite(productId, token);
         }
-        fetchRecommendations();
+        fetchRecommendations(); // Reimprospatam lista pentru a reflecta schimbarea
     } catch (error) {
         alert(`Eroare: ${error.message}`);
     }
@@ -42,7 +62,6 @@ async function handleFavoriteToggle(productId, isCurrentlyFavorited) {
  * Preia produsele de la API si le afiseaza pe pagina, aplicand filtrele curente.
  */
 async function fetchRecommendations() {
-    // Colectam valorile din TOATE filtrele
     const filters = {
         q: searchInput.value,
         minPrice: minPriceInput.value,
@@ -65,7 +84,6 @@ async function fetchRecommendations() {
     }
 
     try {
-        // Trimitem obiectul de filtre catre functia din api.js
         const products = await api.getRecommendations(filters);
         recommendationsContainer.innerHTML = '';
 
@@ -78,6 +96,7 @@ async function fetchRecommendations() {
             device.isFavorited = favoriteProductIds.has(device.id);
             const card = createProductCard(device, {
                 onEditClick: openEditModal,
+                onDeleteClick: handleDeleteProduct,
                 onFavoriteToggle: handleFavoriteToggle,
             });
             recommendationsContainer.appendChild(card);
@@ -107,11 +126,13 @@ async function populateSiteFilter() {
     }
 }
 
-// --- Punctul de intrare ---
+// --- Punctul de intrare (Main) ---
 document.addEventListener('DOMContentLoaded', () => {
+    // Initializam modulele si le pasam functii de callback
     initAuth({ onAuthChange: fetchRecommendations });
     initAdminActions({ onProductChange: fetchRecommendations });
 
+    // Atasam listenerii pentru butoanele de navigatie
     if (viewStatsButton) {
         viewStatsButton.addEventListener('click', () => { window.location.href = '/stats.html'; });
     }
@@ -122,13 +143,13 @@ document.addEventListener('DOMContentLoaded', () => {
         viewFavoritesButton.addEventListener('click', () => { window.location.href = '/favorites.html'; });
     }
 
+    // Incarcam datele initiale
     populateSiteFilter();
     fetchRecommendations();
 
-    // Adaugam un singur event listener pentru toate filtrele, pentru eficienta
+    // Adaugam un singur event listener pentru toate filtrele
     const filterElements = [searchInput, minPriceInput, maxPriceInput, batteryLifeInput, deviceTypeInput, siteFilterSelect];
     filterElements.forEach(el => {
-        // Folosim 'input' pentru o reactie instantanee, si 'change' pentru select
         const eventType = el.tagName === 'SELECT' ? 'change' : 'input';
         el.addEventListener(eventType, fetchRecommendations);
     });

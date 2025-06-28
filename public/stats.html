@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" >
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" >
+  <title>Statistici Populare - Recomandări Dispozitive Electronice</title>
+  <link rel="icon" href="ico.jpg" type="image/jpeg">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/stats.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <header>
+     <a href="/">
+        <h1>Recomandări Dispozitive Electronice</h1>
+     </a>
+  </header>
+
+  <main>
+    <section id="popularStats">
+      <button id="backToHome">Înapoi la pagina principală</button>
+      <h2>Statistici populare</h2>
+      <div class="chart-container">
+          <h3>Cele mai apreciate produse</h3>
+          <canvas id="likesChart"></canvas>
+      </div>
+      <div class="chart-container">
+          <h3>Cele mai vizualizate produse</h3>
+          <canvas id="viewsChart"></canvas>
+      </div>
+      <p id="popularStatsInfo" style="text-align: center; font-style: italic; color: #888; margin-top: 1em; display: none;">
+        Nu sunt statistici populare disponibile momentan.
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    <div class="rss-box">
+        <a href="/rss">RSS Feed</a>
+    </div>
+  </footer>
+
+  <script src="js/stats.js" defer type="module"></script>
+</body>
+</html>

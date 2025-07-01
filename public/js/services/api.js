@@ -57,6 +57,13 @@ export function deleteProduct(productId, token) {
         method: 'DELETE',
     }, token);
 }
+
+export function updateProduct(productId, productData, token) {
+    return _request(`/products/${productId}`, {
+        method: 'PUT',
+        body: JSON.stringify(productData),
+    }, token);
+}
 // --- Alte Functii ---
 export function getSites() {
     return _request('/sites');

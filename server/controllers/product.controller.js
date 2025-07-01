@@ -151,6 +151,30 @@ async function deleteProduct(req, res) {
     }
 }
 
+async function updateProduct(req, res) {
+    const productId = req.params.id;
+    try {
+        const { name, price, batteryLife, type, features, link, image, siteName } = await parseBody(req);
+        if (!name || !price || !type || !features || features.length === 0) {
+            return sendJSON(res, { message: 'Toate campurile obligatorii trebuie completate.' }, 400);
+        }
+
+        const result = await pool.query(
+            'UPDATE products SET name = $1, price = $2, batterylife = $3, type = $4, features = $5, link = $6, image = $7, site_name = $8 WHERE id = $9 RETURNING id',
+            [name, price, batteryLife, type, features, link, image, siteName, productId]
+        );
+
+        if (result.rowCount > 0) {
+            sendJSON(res, { message: 'Produs actualizat cu succes!', product: result.rows[0] });
+        } else {
+            sendJSON(res, { message: 'Produsul nu a fost gasit pentru actualizare.' }, 404);
+        }
+    } catch (error) {
+        console.error(`SERVER ERROR updating product ID ${productId}:`, error);
+        sendJSON(res, { message: 'Eroare de server la actualizarea produsului.' }, 500);
+    }
+}
+
 // Exportam TOATE functiile necesare
 module.exports = {
     getRecommendations,
@@ -158,5 +182,6 @@ module.exports = {
     createProduct,
     getPopularProducts,
     getDistinctSites,
-    deleteProduct, // <-- Asigura-te ca aceasta linie exista
+    deleteProduct,
+    updateProduct, // <-- Asigura-te ca aceasta linie exista
 };

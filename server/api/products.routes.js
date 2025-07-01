@@ -22,5 +22,11 @@ module.exports = {
         GET: productController.getProductById,
         DELETE: [authenticateToken, isAdmin, productController.deleteProduct]
     },
-    
+  
+     '/api/products/:id': {
+        GET: productController.getProductById,
+        // Adaugam metoda PUT, protejata de aceleasi middleware-uri ca DELETE si POST
+        PUT: [authenticateToken, isAdmin, productController.updateProduct],
+        DELETE: [authenticateToken, isAdmin, productController.deleteProduct]
+    },
 };
